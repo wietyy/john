@@ -16,5 +16,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@types/uuidv4": "^2.0.0",
+    "uuidv4": "^6.2.13"
   }
 }

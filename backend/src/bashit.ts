@@ -31,5 +31,3 @@ export function bashit(cmd: string, args: string[] = []): Promise<string> {
         child.on("error", reject);
     });
 }
-
-export default bashit;
