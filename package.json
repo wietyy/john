@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@types/uuidv4": "^2.0.0",
-    "uuidv4": "^6.2.13"
+    "dotenv": "^17.4.2",
+    "uuidv4": "^1.0.0"
   }
 }

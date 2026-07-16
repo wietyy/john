@@ -16,7 +16,6 @@ app.post("/createuser", async (req: any, res: any) => {
     res.send(apikey);
 });
 
-// TODO: test this
 app.post("/login", async (req: any, res: any) => {
     const username = req.body.username;
     const passhash = req.body.passhash;
@@ -24,7 +23,6 @@ app.post("/login", async (req: any, res: any) => {
     res.send(apikey);
 });
 
-// TODO: test this
 app.post("/setdata", async (req: any, res: any) => {
     const apikey = req.body.apikey;
     const data = req.body.data;
@@ -32,9 +30,9 @@ app.post("/setdata", async (req: any, res: any) => {
     res.send("ok");
 });
 
-// TODO: test this
 app.get("/getdata", async (req: any, res: any) => {
-    const apikey = req.query.apikey;
+    // this shit said req.query, it took an hour to figure out. will never do that again
+    const apikey = req.body.apikey;
     const data = await getData(apikey);
     res.send(data);
 });
