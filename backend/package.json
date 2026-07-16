@@ -7,10 +7,15 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "@types/express": "^5.0.6",
-    "express": "^5.2.1"
+    "dotenv": "latest",
+    "express": "^5.2.1",
+    "typescript": "latest",
+    "uuidv4": "^1.0.0"
   }
 }
