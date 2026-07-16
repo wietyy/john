@@ -1,5 +1,8 @@
 import { createUser, getData, login, setData, usernameExists } from "./db.js";
 import express from "express";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
@@ -37,6 +40,6 @@ app.get("/getdata", async (req: any, res: any) => {
     res.send(data);
 });
 
-app.listen(3000, () => {
-    console.log("Listening on port 3000");
+app.listen(process.env.PORT, () => {
+    console.log(`Listening on port ${process.env.PORT}`);
 });
