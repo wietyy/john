@@ -6,7 +6,7 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-
+app.use(express.static("frontend"));
 
 app.post("/createuser", async (req: any, res: any) => {
     const username = req.body.username;
