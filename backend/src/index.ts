@@ -1,6 +1,7 @@
 import { createUser, getData, login, setData, usernameExists } from "./db.js";
 import express from "express";
 import dotenv from "dotenv";
+import bcrypt from "bcryptjs";
 
 dotenv.config();
 
@@ -10,20 +11,26 @@ app.use(express.static("frontend"));
 
 app.post("/createuser", async (req: any, res: any) => {
     const username = req.body.username;
-    const passhash = req.body.passhash;
+    const password = req.body.password;
     if (await usernameExists(username)) {
         res.status(400).send("Username already exists");
         return;
     }
-    const apikey = await createUser(username, passhash);
+    const hash = bcrypt.hashSync(password, 10);
+
+    const apikey = await createUser(username, hash);
     res.send(apikey);
 });
 
 app.post("/login", async (req: any, res: any) => {
     const username = req.body.username;
-    const passhash = req.body.passhash;
-    const apikey = await login(username, passhash);
-    res.send(apikey);
+    const password = req.body.password;
+    const [storedPasshash, apikey] = await login(username);
+    if (bcrypt.compareSync(password, atob(storedPasshash?.toString() || "") || "")) {
+        res.send(apikey);
+    } else {
+        res.status(401).send("Invalid username or password");
+    }
 });
 
 app.post("/setdata", async (req: any, res: any) => {

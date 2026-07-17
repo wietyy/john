@@ -25,12 +25,12 @@ export async function usernameExists(username: string) {
     return result.length > 0;
 }
 
-export async function login(username: string, passhash: string) {
+export async function login(username: string) {
     const result = await bashit("sqlite3", [
         db,
-        `SELECT apikey FROM main WHERE username = "${btoa(username)}" AND passhash = "${btoa(passhash)}";`,
+        `SELECT passhash, apikey FROM main WHERE username = "${btoa(username)}";`,
     ]);
-    return result;
+    return result.split("|");
 }
 
 export async function getData(apikey: string) {
