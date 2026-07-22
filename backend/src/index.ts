@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 app.use(express.static("frontend"));
 
-app.post("/createuser", async (req: any, res: any) => {
+app.post("/api/createuser", async (req: any, res: any) => {
     const username = req.body.username;
     const password = req.body.password;
     if (await usernameExists(username)) {
@@ -22,7 +22,7 @@ app.post("/createuser", async (req: any, res: any) => {
     res.send(apikey);
 });
 
-app.post("/login", async (req: any, res: any) => {
+app.post("/api/login", async (req: any, res: any) => {
     const username = req.body.username;
     const password = req.body.password;
     const [storedPasshash, apikey] = await login(username);
@@ -33,14 +33,14 @@ app.post("/login", async (req: any, res: any) => {
     }
 });
 
-app.post("/setdata", async (req: any, res: any) => {
+app.post("/api/setdata", async (req: any, res: any) => {
     const apikey = req.body.apikey;
     const data = req.body.data;
     await setData(apikey, data);
     res.send("ok");
 });
 
-app.get("/getdata", async (req: any, res: any) => {
+app.get("/api/getdata", async (req: any, res: any) => {
     // this shit said req.query, it took an hour to figure out. will never do that again
     const apikey = req.body.apikey;
     const data = await getData(apikey);

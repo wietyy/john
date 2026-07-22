@@ -1,5 +1,5 @@
 export async function createUser(username: string, password: string) {
-    const response = await fetch("/createuser", {
+    const response = await fetch("/api/createuser", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -14,7 +14,7 @@ export async function createUser(username: string, password: string) {
 }
 
 export async function login(username: string, password: string) {
-    const response = await fetch("/login", {
+    const response = await fetch("/api/login", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -29,7 +29,7 @@ export async function login(username: string, password: string) {
 }
 
 export async function getData(apikey: string) {
-    const response = await fetch("/data", {
+    const response = await fetch("/api/data", {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
@@ -43,7 +43,7 @@ export async function getData(apikey: string) {
 }
 
 export async function setData(apikey: string, data: JSON) {
-    const response = await fetch("/data", {
+    const response = await fetch("/api/data", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
