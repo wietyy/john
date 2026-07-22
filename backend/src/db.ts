@@ -30,7 +30,9 @@ export async function login(username: string) {
         db,
         `SELECT passhash, apikey FROM main WHERE username = "${btoa(username)}";`,
     ]);
-    return result.split("|");
+    if (!result) return null;
+    const parts = result.split("|");
+    return { storedPasshash: parts[0], apikey: parts[1] };
 }
 
 export async function getData(apikey: string) {

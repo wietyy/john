@@ -9,8 +9,8 @@ export async function createUser(username: string, password: string) {
             "password": password
         })
     });
-    const apikey = await response.text();
-    return apikey;
+    if (!response.ok) throw new Error(await response.text());
+    return await response.text();
 }
 
 export async function login(username: string, password: string) {
@@ -24,26 +24,18 @@ export async function login(username: string, password: string) {
             "password": password
         })
     });
-    const apikey = await response.text();
-    return apikey;
+    if (!response.ok) throw new Error(await response.text());
+    return await response.text();
 }
 
 export async function getData(apikey: string) {
-    const response = await fetch("/api/data", {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            "apikey": apikey
-        })
-    });
-    const data = await response.json();
-    return data;
+    const response = await fetch(`/api/getdata?apikey=${encodeURIComponent(apikey)}`);
+    if (!response.ok) throw new Error(await response.text());
+    return await response.text();
 }
 
 export async function setData(apikey: string, data: JSON) {
-    const response = await fetch("/api/data", {
+    const response = await fetch("/api/setdata", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -53,5 +45,5 @@ export async function setData(apikey: string, data: JSON) {
             "data": data
         })
     });
-    return response.ok;
+    if (!response.ok) throw new Error(await response.text());
 }

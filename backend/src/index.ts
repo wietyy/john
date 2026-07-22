@@ -25,9 +25,13 @@ app.post("/api/createuser", async (req: any, res: any) => {
 app.post("/api/login", async (req: any, res: any) => {
     const username = req.body.username;
     const password = req.body.password;
-    const [storedPasshash, apikey] = await login(username);
-    if (bcrypt.compareSync(password, atob(storedPasshash?.toString() || "") || "")) {
-        res.send(apikey);
+    const user = await login(username);
+    if (!user) {
+        res.status(401).send("Invalid username or password");
+        return;
+    }
+    if (user.storedPasshash && bcrypt.compareSync(password, atob(user.storedPasshash))) {
+        res.send(user.apikey);
     } else {
         res.status(401).send("Invalid username or password");
     }
@@ -41,8 +45,7 @@ app.post("/api/setdata", async (req: any, res: any) => {
 });
 
 app.get("/api/getdata", async (req: any, res: any) => {
-    // this shit said req.query, it took an hour to figure out. will never do that again
-    const apikey = req.body.apikey;
+    const apikey = req.query.apikey;
     const data = await getData(apikey);
     res.send(data);
 });
