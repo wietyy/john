@@ -34,7 +34,7 @@ export async function getData(apikey: string) {
     return await response.text();
 }
 
-export async function setData(apikey: string, data: JSON) {
+export async function setData(apikey: string, data: any) {
     const response = await fetch("/api/setdata", {
         method: "POST",
         headers: {
