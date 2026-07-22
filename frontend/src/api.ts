@@ -1,4 +1,3 @@
-// todo: test this shit
 export async function createUser(username: string, password: string) {
     const response = await fetch("/createuser", {
         method: "POST",
@@ -14,7 +13,6 @@ export async function createUser(username: string, password: string) {
     return apikey;
 }
 
-// todo: test this shit
 export async function login(username: string, password: string) {
     const response = await fetch("/login", {
         method: "POST",
@@ -30,7 +28,6 @@ export async function login(username: string, password: string) {
     return apikey;
 }
 
-//todo: test this shit
 export async function getData(apikey: string) {
     const response = await fetch("/data", {
         method: "GET",
@@ -45,7 +42,6 @@ export async function getData(apikey: string) {
     return data;
 }
 
-// todo: test this shit
 export async function setData(apikey: string, data: JSON) {
     const response = await fetch("/data", {
         method: "POST",
@@ -59,5 +55,3 @@ export async function setData(apikey: string, data: JSON) {
     });
     return response.ok;
 }
-// todo: create setData function
-// todo: create getData function
