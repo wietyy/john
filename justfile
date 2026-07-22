@@ -6,3 +6,10 @@ build:
 
 start:
     cd prod && npm run start
+
+dev:
+    #!/usr/bin/env bash
+    set -e
+    cd backend && just run &
+    cd frontend && npm run dev &
+    wait
