@@ -6,35 +6,28 @@ JOHN is, put simply, an incredibly badass way to keep track of your finances. It
 
 ## Stack (nerd stuff)
 
-- **Frontend**: React 19, Vite 8, Tailwind v4, react-router 8
 - **Backend**: Express 5, SQLite, bcrypt
+- **Frontend**: Plain HTML/CSS/JS, served directly by Express. Just like 3rd grade.
 - **Auth**: API key-based with username/password (don't worry, it's secure™)
 
 ## Structure
 
 ```
-./backend          The backend (it's in the name)
-./frontend         Frontend base
-./frontend/src     Main container for react app
-./frontend/src/*   Individual pages, routed via react-router
-./agents           Spreadsheet exports and specs
+./           Project base
+./src        The entire app
+./src/public The frontend. HTML/CSS/JS, served straight by Express
+./src/*.ts   The backend source
+./agents     Spreadsheet exports and specs
 ```
 
 ## Quick Start
 
 ```bash
-just setup        # creates .env if it doesn't exist (lazy)
-just dev          # builds backend + starts both servers
+just setup   # creates .env, initializes the database, installs deps
+just dev     # builds + starts the server
 ```
 
-Or do it the hard way:
-
-```bash
-cd backend && npm run build && node dist/index.js &
-cd frontend && npm run dev &
-```
-
-Frontend proxys `/api` to `localhost:3000` so everything just works.
+Then hit `http://localhost:3000`.
 
 ## What It Does
 

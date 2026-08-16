@@ -3,41 +3,36 @@ check:
     set -euo pipefail
     command -v node >/dev/null 2>&1 || { echo "node not found — you need Node.js my dude"; exit 1; }
     command -v npm >/dev/null 2>&1 || { echo "npm not found — you need npm my dude"; exit 1; }
+    command -v sqlite3 >/dev/null 2>&1 || { echo "sqlite3 not found — you need sqlite3 my dude"; exit 1; }
     echo "prerequisites: ✅"
 
 setup: check
     #!/usr/bin/env bash
     set -euo pipefail
-    if [ -f backend/.env ]; then
+    if [ -f src/.env ]; then
         echo ".env already exists, skipping"
     else
-        printf 'PORT=3000\nDATABASE=main.db\n' > backend/.env
-        echo "created backend/.env"
+        printf 'PORT=3000\nDATABASE=main.db\n' > src/.env
+        echo "created src/.env"
     fi
     echo "initializing database..."
-    db=$(grep '^DATABASE=' backend/.env | cut -d= -f2)
+    db=$(grep '^DATABASE=' src/.env | cut -d= -f2)
     db=${db:-main.db}
-    sqlite3 "$db" < backend/schema.sql
+    (cd src && sqlite3 "$db" < schema.sql)
     echo "database ready: $db"
-    if [ ! -d backend/node_modules ]; then
+    if [ ! -d src/node_modules ]; then
         echo "installing backend deps..."
-        cd backend && npm install
-    fi
-    if [ ! -d frontend/node_modules ]; then
-        echo "installing frontend deps..."
-        cd frontend && npm install
+        cd src && npm install
     fi
 
 build: setup
     #!/usr/bin/env bash
     set -euo pipefail
     echo "building backend..."
-    (cd backend && npm run build) || { echo "backend build failed"; exit 1; }
-    echo "building frontend..."
-    (cd frontend && npm run build) || { echo "frontend build failed"; exit 1; }
+    (cd src && npm run build) || { echo "backend build failed"; exit 1; }
     rm -rf prod
-    cp -r backend prod
-    cp -r frontend/dist prod/frontend
+    cp -r src prod
+    rm -rf prod/node_modules prod/.env
     echo "build complete — it's beautiful"
 
 start:
@@ -62,16 +57,14 @@ dev: setup
     set -euo pipefail
     cleanup() {
         echo ""
-        echo "shutting down JOHN dev servers..."
+        echo "shutting down JOHN dev server..."
         kill $(jobs -p) 2>/dev/null || true
         wait 2>/dev/null || true
     }
     trap cleanup EXIT
     echo "starting backend..."
-    cd backend && npx tsc && node dist/index.js &
-    echo "starting frontend..."
-    cd frontend && npm run dev &
-    echo "both servers running — have fun!"
+    cd src && npx tsc && node dist/index.js &
+    echo "backend running — have fun!"
     wait
 
 clean:

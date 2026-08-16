@@ -2,12 +2,22 @@ import { createUser, getData, login, setData, usernameExists } from "./db.js";
 import express from "express";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
-app.use(express.static("frontend"));
+app.use(express.static(path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "public")));
+
+app.get("/login", (req, res) => {
+    res.sendFile(path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "public", "login.html"));
+});
+
+app.get("/app", (req, res) => {
+    res.sendFile(path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "public", "app.html"));
+});
 
 app.post("/api/createuser", async (req: any, res: any) => {
     const username = req.body.username;
