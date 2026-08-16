@@ -14,6 +14,11 @@ setup: check
         printf 'PORT=3000\nDATABASE=main.db\n' > backend/.env
         echo "created backend/.env"
     fi
+    echo "initializing database..."
+    db=$(grep '^DATABASE=' backend/.env | cut -d= -f2)
+    db=${db:-main.db}
+    sqlite3 "$db" < backend/schema.sql
+    echo "database ready: $db"
     if [ ! -d backend/node_modules ]; then
         echo "installing backend deps..."
         cd backend && npm install
