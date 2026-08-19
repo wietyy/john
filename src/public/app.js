@@ -1,6 +1,24 @@
 "use strict";
 
 const STORAGE_KEY = "john";
+const SCHEMA_VERSION = 1;
+const migrations = [];
+
+function migrate(data) {
+    if (!data || typeof data !== "object") return { version: SCHEMA_VERSION, accounts: [DEFAULT_ACCOUNT()] };
+    let version = Number(data.version) || 0;
+    for (let i = version; i < SCHEMA_VERSION; i++) {
+        const step = migrations[i];
+        if (!step) break;
+        data = step(data);
+    }
+    data.version = SCHEMA_VERSION;
+    if (!Array.isArray(data.accounts) || data.accounts.length === 0) {
+        data.accounts = [DEFAULT_ACCOUNT()];
+    }
+    return data;
+}
+
 const DEFAULT_ACCOUNT = () => ({
     accountName: "Checking",
     keyNumber: 0,
@@ -8,9 +26,11 @@ const DEFAULT_ACCOUNT = () => ({
     funds: [],
 });
 
-let account = DEFAULT_ACCOUNT();
+let accounts = [DEFAULT_ACCOUNT()];
+let current = 0;
 let loaded = false;
 let pushTimer = null;
+const act = () => accounts[current];
 const accountName = document.getElementById("account-name");
 const txnBody = document.getElementById("txn-body");
 const fundList = document.getElementById("fund-list");
@@ -28,9 +48,9 @@ async function pullServer() {
 
 function saveLocal() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        version: 1,
+        version: SCHEMA_VERSION,
         apikey: localStorage.getItem("apikey"),
-        accounts: [account],
+        accounts,
     }));
 }
 
@@ -42,9 +62,9 @@ function pushServer() {
         body: JSON.stringify({
             apikey,
             data: JSON.stringify({
-                version: 1,
+                version: SCHEMA_VERSION,
                 apikey,
-                accounts: [account],
+                accounts,
             }),
         }),
     });
@@ -78,9 +98,9 @@ function fmtMoney(n) {
 // ---------- rendering ----------
 
 function renderTotals() {
-    const txnSum = account.transactions.reduce((s, t) => s + (Number(t.amount) || 0), 0);
-    const nsm = (Number(account.keyNumber) || 0) + txnSum;
-    const fundsTotal = account.funds.reduce((s, f) => s + (Number(f.amount) || 0), 0);
+    const txnSum = act().transactions.reduce((s, t) => s + (Number(t.amount) || 0), 0);
+    const nsm = (Number(act().keyNumber) || 0) + txnSum;
+    const fundsTotal = act().funds.reduce((s, f) => s + (Number(f.amount) || 0), 0);
     nsmEl.textContent = fmtMoney(nsm);
     fundsTotalEl.textContent = fmtMoney(fundsTotal);
     grandTotalEl.textContent = fmtMoney(nsm + fundsTotal);
@@ -94,21 +114,21 @@ function renderTransactions() {
     knRow.className = "keynumber-row";
     knRow.innerHTML = `
         <td class="mono-blue" style="font-size:0.75rem">Key Number</td>
-        <td><input type="number" step="0.01" class="keynumber-input" value="${Number(account.keyNumber) || ""}"></td>
-        <td style="text-align:right"><span class="mono-blue">${account.keyNumber >= 0 ? "+" : ""}${Number(account.keyNumber || 0).toFixed(2)}</span></td>
+        <td><input type="number" step="0.01" class="keynumber-input" value="${Number(act().keyNumber) || ""}"></td>
+        <td style="text-align:right"><span class="mono-blue">${act().keyNumber >= 0 ? "+" : ""}${Number(act().keyNumber || 0).toFixed(2)}</span></td>
     `;
     const knInput = knRow.querySelector(".keynumber-input");
     knInput.addEventListener("input", () => {
-        account.keyNumber = parseFloat(knInput.value) || 0;
+        act().keyNumber = parseFloat(knInput.value) || 0;
         knRow.querySelector("td:last-child span").textContent =
-            `${account.keyNumber >= 0 ? "+" : ""}${account.keyNumber.toFixed(2)}`;
+            `${act().keyNumber >= 0 ? "+" : ""}${act().keyNumber.toFixed(2)}`;
         renderTotals();
         schedulePush();
     });
     txnBody.appendChild(knRow);
 
     // Transactions
-    account.transactions.forEach((t, i) => {
+    act().transactions.forEach((t, i) => {
         const tr = document.createElement("tr");
         tr.className = "tx-row";
 
@@ -137,12 +157,28 @@ function renderTransactions() {
         tr.appendChild(makeCell("date"));
         tr.appendChild(makeCell("memo"));
         tr.appendChild(makeCell("amount"));
+
+        const delTd = document.createElement("td");
+        delTd.style.textAlign = "right";
+        const del = document.createElement("button");
+        del.className = "icon-btn danger";
+        del.title = "Delete transaction";
+        del.innerHTML = `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>`;
+        del.addEventListener("click", () => {
+            act().transactions.splice(i, 1);
+            renderTransactions();
+            renderTotals();
+            schedulePush();
+        });
+        delTd.appendChild(del);
+        tr.appendChild(delTd);
+
         txnBody.appendChild(tr);
     });
 }
 
 function startEdit(row, col) {
-    const t = account.transactions[row];
+    const t = act().transactions[row];
     if (!t) return;
     const trs = txnBody.querySelectorAll("tr.tx-row");
     const tr = trs[row];
@@ -173,9 +209,9 @@ function startEdit(row, col) {
         else t[col] = input.value;
 
         // auto-add a fresh row if the last one has data
-        const last = account.transactions[account.transactions.length - 1];
+        const last = act().transactions[act().transactions.length - 1];
         if (last && (last.date || last.memo || last.amount !== 0)) {
-            account.transactions.push({ date: "", memo: "", amount: 0 });
+            act().transactions.push({ date: "", memo: "", amount: 0 });
         }
         renderTransactions();
         renderTotals();
@@ -202,14 +238,14 @@ function startEdit(row, col) {
 
 function renderFunds() {
     fundList.innerHTML = "";
-    if (account.funds.length === 0) {
+    if (act().funds.length === 0) {
         const p = document.createElement("p");
         p.className = "no-funds";
         p.textContent = "No funds yet";
         fundList.appendChild(p);
     }
 
-    account.funds.forEach((f, i) => {
+    act().funds.forEach((f, i) => {
         const ou = (Number(f.amount) || 0) - (Number(f.goal) || 0);
         const card = document.createElement("div");
         card.className = "fund-card";
@@ -305,7 +341,7 @@ function renderFunds() {
         removeBtn.title = "Remove fund";
         removeBtn.innerHTML = `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>`;
         removeBtn.addEventListener("click", () => {
-            account.funds.splice(i, 1);
+            act().funds.splice(i, 1);
             renderFunds();
             renderTotals();
             schedulePush();
@@ -323,31 +359,141 @@ function renderFunds() {
 }
 
 function renderAll() {
-    accountName.value = account.accountName;
+    act().accountName = act().accountName || "Account";
+    accountName.value = act().accountName;
+    document.getElementById("nav-account").textContent = act().accountName;
     renderTransactions();
     renderFunds();
     renderTotals();
 }
 
+function renderTabs() {
+    const tabs = document.getElementById("tabs");
+    tabs.innerHTML = "";
+    accounts.forEach((acc, i) => {
+        const tab = document.createElement("div");
+        tab.className = "tab" + (i === current ? " active" : "");
+        tab.title = acc.accountName || "Account " + (i + 1);
+        tab.tabIndex = 0;
+        tab.setAttribute("role", "button");
+
+        const name = document.createElement("span");
+        name.className = "tab-name";
+        name.textContent = acc.accountName || "Account " + (i + 1);
+        tab.appendChild(name);
+
+        if (accounts.length > 1) {
+            const x = document.createElement("span");
+            x.className = "tab-x";
+            x.textContent = "×";
+            x.addEventListener("click", (e) => e.stopPropagation());
+            x.addEventListener("dblclick", (e) => e.stopPropagation());
+            x.addEventListener("click", () => removeAccount(i));
+            tab.appendChild(x);
+        }
+
+        tab.addEventListener("click", () => switchAccount(i));
+        tab.addEventListener("dblclick", () => startTabRename(i));
+        tab.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                switchAccount(i);
+            }
+        });
+        tabs.appendChild(tab);
+    });
+}
+
+function startTabRename(i) {
+    const tabs = document.getElementById("tabs");
+    const tab = tabs.children[i];
+    const acc = accounts[i];
+    if (!tab || !acc) return;
+
+    const input = document.createElement("input");
+    input.className = "tab-rename";
+    input.value = acc.accountName || "";
+    input.placeholder = "Account " + (i + 1);
+    tab.innerHTML = "";
+    tab.appendChild(input);
+    input.focus();
+    input.select();
+
+    let committed = false;
+    const commit = () => {
+        if (committed) return;
+        committed = true;
+        acc.accountName = input.value.trim();
+        if (i === current) {
+            accountName.value = acc.accountName || "Account " + (i + 1);
+            document.getElementById("nav-account").textContent = acc.accountName || "Account " + (i + 1);
+        }
+        renderTabs();
+        schedulePush();
+    };
+
+    input.addEventListener("blur", commit);
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === "Tab") {
+            e.preventDefault();
+            commit();
+        }
+        if (e.key === "Escape") {
+            e.preventDefault();
+            committed = true;
+            renderTabs();
+        }
+    });
+}
+
+function switchAccount(i) {
+    if (i === current) return;
+    current = i;
+    renderAll();
+    renderTabs();
+    schedulePush();
+}
+
+function removeAccount(i) {
+    if (accounts.length <= 1) return;
+    if (!confirm(`Delete account "${accounts[i].accountName || "Untitled"}"?`)) return;
+    accounts.splice(i, 1);
+    if (current >= accounts.length) current = accounts.length - 1;
+    else if (i < current) current--;
+    renderAll();
+    renderTabs();
+    schedulePush();
+}
+
 // ---------- events ----------
 
 accountName.addEventListener("input", () => {
-    account.accountName = accountName.value;
+    act().accountName = accountName.value;
     document.getElementById("nav-account").textContent = accountName.value;
+    const activeTab = document.querySelector(".tab.active .tab-name");
+    if (activeTab) activeTab.textContent = accountName.value || "Account " + (current + 1);
     schedulePush();
 });
 
 document.getElementById("add-txn").addEventListener("click", () => {
-    account.transactions.push({ date: "", memo: "", amount: 0 });
+    act().transactions.push({ date: "", memo: "", amount: 0 });
     renderTransactions();
     renderTotals();
     schedulePush();
-    startEdit(account.transactions.length - 1, "date");
+    startEdit(act().transactions.length - 1, "date");
 });
 
 document.getElementById("add-fund").addEventListener("click", () => {
-    account.funds.push({ fundName: "", amount: 0, goal: 0, description: "" });
+    act().funds.push({ fundName: "", amount: 0, goal: 0, description: "" });
     renderFunds();
+    schedulePush();
+});
+
+document.getElementById("add-tab").addEventListener("click", () => {
+    accounts.push({ ...DEFAULT_ACCOUNT(), accountName: "Account " + (accounts.length + 1) });
+    current = accounts.length - 1;
+    renderAll();
+    renderTabs();
     schedulePush();
 });
 
@@ -365,21 +511,24 @@ document.getElementById("logout-btn").addEventListener("click", () => {
         return;
     }
     try {
-        const data = await pullServer();
+        const data = migrate(await pullServer());
         if (data.accounts && data.accounts.length > 0) {
-            account = data.accounts[0];
+            accounts = data.accounts;
+            current = 0;
         }
     } catch {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
             try {
-                const data = JSON.parse(raw);
+                const data = migrate(JSON.parse(raw));
                 if (data.accounts && data.accounts.length > 0) {
-                    account = data.accounts[0];
+                    accounts = data.accounts;
+                    current = 0;
                 }
             } catch { /* corrupted local data — start fresh */ }
         }
     }
     renderAll();
+    renderTabs();
     loaded = true;
 })();
