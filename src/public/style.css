@@ -469,6 +469,10 @@ thead th:last-child {
     background: rgba(255, 255, 255, 0.02);
 }
 
+.tx-row:hover .icon-btn {
+    opacity: 1;
+}
+
 .tx-cell {
     display: block;
     cursor: text;
