@@ -337,9 +337,11 @@ function renderTabs() {
     const tabs = document.getElementById("tabs");
     tabs.innerHTML = "";
     accounts.forEach((acc, i) => {
-        const tab = document.createElement("button");
+        const tab = document.createElement("div");
         tab.className = "tab" + (i === current ? " active" : "");
         tab.title = acc.accountName || "Account " + (i + 1);
+        tab.tabIndex = 0;
+        tab.setAttribute("role", "button");
 
         const name = document.createElement("span");
         name.className = "tab-name";
@@ -350,15 +352,63 @@ function renderTabs() {
             const x = document.createElement("span");
             x.className = "tab-x";
             x.textContent = "×";
-            x.addEventListener("click", (e) => {
-                e.stopPropagation();
-                removeAccount(i);
-            });
+            x.addEventListener("click", (e) => e.stopPropagation());
+            x.addEventListener("dblclick", (e) => e.stopPropagation());
+            x.addEventListener("click", () => removeAccount(i));
             tab.appendChild(x);
         }
 
         tab.addEventListener("click", () => switchAccount(i));
+        tab.addEventListener("dblclick", () => startTabRename(i));
+        tab.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                switchAccount(i);
+            }
+        });
         tabs.appendChild(tab);
+    });
+}
+
+function startTabRename(i) {
+    const tabs = document.getElementById("tabs");
+    const tab = tabs.children[i];
+    const acc = accounts[i];
+    if (!tab || !acc) return;
+
+    const input = document.createElement("input");
+    input.className = "tab-rename";
+    input.value = acc.accountName || "";
+    input.placeholder = "Account " + (i + 1);
+    tab.innerHTML = "";
+    tab.appendChild(input);
+    input.focus();
+    input.select();
+
+    let committed = false;
+    const commit = () => {
+        if (committed) return;
+        committed = true;
+        acc.accountName = input.value.trim();
+        if (i === current) {
+            accountName.value = acc.accountName || "Account " + (i + 1);
+            document.getElementById("nav-account").textContent = acc.accountName || "Account " + (i + 1);
+        }
+        renderTabs();
+        schedulePush();
+    };
+
+    input.addEventListener("blur", commit);
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === "Tab") {
+            e.preventDefault();
+            commit();
+        }
+        if (e.key === "Escape") {
+            e.preventDefault();
+            committed = true;
+            renderTabs();
+        }
     });
 }
 

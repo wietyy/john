@@ -695,6 +695,7 @@ thead th:last-child {
     font-size: 0.8125rem;
     cursor: pointer;
     white-space: nowrap;
+    user-select: none;
     transition: all 0.2s;
 }
 
@@ -719,6 +720,18 @@ thead th:last-child {
 
 .tab-x:hover {
     color: #f87171;
+}
+
+.tab-rename {
+    background: #030712;
+    border: 1px solid #3b82f6;
+    border-radius: 0.25rem;
+    color: #fff;
+    font-family: ui-monospace, monospace;
+    font-size: 0.8125rem;
+    padding: 0.15rem 0.4rem;
+    outline: none;
+    width: 9rem;
 }
 
 .tab-add {
