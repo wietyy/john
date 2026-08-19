@@ -1,4 +1,5 @@
 import { createUser, getData, login, setData, usernameExists } from "./db.js";
+import { rateLimit } from "./ratelimit.js";
 import express from "express";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
@@ -9,6 +10,9 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use("/api", rateLimit(300));
+app.use("/api/login", rateLimit(10));
+app.use("/api/createuser", rateLimit(10));
 app.use(express.static(path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "public")));
 
 app.get("/login", (req, res) => {
