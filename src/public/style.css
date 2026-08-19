@@ -317,7 +317,7 @@ body {
 .app-main {
     max-width: 80rem;
     margin: 0 auto;
-    padding: 2rem 1.5rem;
+    padding: 2rem 1.5rem 5rem;
 }
 
 .account-name-input {
@@ -657,4 +657,82 @@ thead th:last-child {
 
 .fund-desc:focus {
     border-color: #3b82f6;
+}
+
+/* tabs bar */
+.tabs-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: stretch;
+    background: rgba(3, 7, 18, 0.95);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1rem;
+    gap: 0.25rem;
+    overflow-x: auto;
+    z-index: 10;
+}
+
+.tabs {
+    display: flex;
+    align-items: stretch;
+    gap: 0.25rem;
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    color: #9ca3af;
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    font-family: ui-monospace, monospace;
+    font-size: 0.8125rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.tab:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.tab.active {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.5);
+    color: #fff;
+}
+
+.tab-x {
+    font-size: 0.875rem;
+    line-height: 1;
+    color: #6b7280;
+    padding: 0 0.25rem;
+    border-radius: 0.25rem;
+}
+
+.tab-x:hover {
+    color: #f87171;
+}
+
+.tab-add {
+    background: transparent;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    color: #6b7280;
+    border-radius: 0.5rem;
+    padding: 0 0.75rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-add:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.4);
 }
