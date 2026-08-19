@@ -1,6 +1,24 @@
 "use strict";
 
 const STORAGE_KEY = "john";
+const SCHEMA_VERSION = 1;
+const migrations = [];
+
+function migrate(data) {
+    if (!data || typeof data !== "object") return { version: SCHEMA_VERSION, accounts: [DEFAULT_ACCOUNT()] };
+    let version = Number(data.version) || 0;
+    for (let i = version; i < SCHEMA_VERSION; i++) {
+        const step = migrations[i];
+        if (!step) break;
+        data = step(data);
+    }
+    data.version = SCHEMA_VERSION;
+    if (!Array.isArray(data.accounts) || data.accounts.length === 0) {
+        data.accounts = [DEFAULT_ACCOUNT()];
+    }
+    return data;
+}
+
 const DEFAULT_ACCOUNT = () => ({
     accountName: "Checking",
     keyNumber: 0,
@@ -30,7 +48,7 @@ async function pullServer() {
 
 function saveLocal() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        version: 1,
+        version: SCHEMA_VERSION,
         apikey: localStorage.getItem("apikey"),
         accounts,
     }));
@@ -44,7 +62,7 @@ function pushServer() {
         body: JSON.stringify({
             apikey,
             data: JSON.stringify({
-                version: 1,
+                version: SCHEMA_VERSION,
                 apikey,
                 accounts,
             }),
@@ -477,7 +495,7 @@ document.getElementById("logout-btn").addEventListener("click", () => {
         return;
     }
     try {
-        const data = await pullServer();
+        const data = migrate(await pullServer());
         if (data.accounts && data.accounts.length > 0) {
             accounts = data.accounts;
             current = 0;
@@ -486,7 +504,7 @@ document.getElementById("logout-btn").addEventListener("click", () => {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
             try {
-                const data = JSON.parse(raw);
+                const data = migrate(JSON.parse(raw));
                 if (data.accounts && data.accounts.length > 0) {
                     accounts = data.accounts;
                     current = 0;
