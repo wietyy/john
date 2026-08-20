@@ -49,4 +49,15 @@ Then hit `http://localhost:3000`.
 
 may god himself have mercy on your soul
 
-NOTE TO SELF: YOU MUST USE HTTPS OR PEOPLE WILL HACK PEOPLES PASSWORDS
+**HTTPS or GTFO.** JOHN sends passwords over the wire, so MITM attacks are a real threat. The server
+serves HTTPS automatically when `SSL_KEY` and `SSL_CERT` env vars point at existing cert files (they're
+set in `src/.env`).
+
+```bash
+just certs   # generate self-signed certs for local dev
+just dev     # now serving over https://localhost:3000
+```
+
+Self-signed certs are fine for dev but your browser will scream at you. For prod, point `SSL_KEY`/`SSL_CERT`
+at real certs from Let's Encrypt (certbot) or your host's panel. No certs configured? Falls back to plain
+HTTP with a warning — don't deploy like that, ya goof.

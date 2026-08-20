@@ -3,6 +3,8 @@ import { rateLimit } from "./ratelimit.js";
 import express from "express";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
+import fs from "fs";
+import https from "https";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -64,6 +66,24 @@ app.get("/api/getdata", async (req: any, res: any) => {
     res.send(data);
 });
 
-app.listen(process.env.PORT, () => {
-    console.log(`Listening on port ${process.env.PORT}`);
-});
+const sslKey = process.env.SSL_KEY;
+const sslCert = process.env.SSL_CERT;
+
+if (sslKey && sslCert && fs.existsSync(sslKey) && fs.existsSync(sslCert)) {
+    https.createServer(
+        {
+            key: fs.readFileSync(sslKey),
+            cert: fs.readFileSync(sslCert),
+        },
+        app
+    ).listen(process.env.PORT, () => {
+        console.log(`Listening on https://localhost:${process.env.PORT}`);
+    });
+} else {
+    if (sslKey || sslCert) {
+        console.warn("SSL certs configured but not found — falling back to plain HTTP. Run 'just certs'.");
+    }
+    app.listen(process.env.PORT, () => {
+        console.log(`Listening on http://localhost:${process.env.PORT}`);
+    });
+}
