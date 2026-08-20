@@ -12,7 +12,7 @@ setup: check
     if [ -f src/.env ]; then
         echo ".env already exists, skipping"
     else
-        printf 'PORT=3000\nDATABASE=main.db\n' > src/.env
+        printf 'PORT=3000\nDATABASE=main.db\nSSL_KEY=certs/key.pem\nSSL_CERT=certs/cert.pem\n' > src/.env
         echo "created src/.env"
     fi
     echo "initializing database..."
@@ -51,6 +51,20 @@ start:
         cd prod && npm install --production
     fi
     cd prod && npm run start
+
+certs:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    command -v openssl >/dev/null 2>&1 || { echo "openssl not found — you need openssl my dude"; exit 1; }
+    if [ -f src/certs/key.pem ] && [ -f src/certs/cert.pem ]; then
+        echo "certs already exist — skipping"
+        exit 0
+    fi
+    mkdir -p src/certs
+    openssl req -x509 -newkey rsa:2048 -nodes \
+        -keyout src/certs/key.pem -out src/certs/cert.pem \
+        -days 365 -subj "/CN=localhost"
+    echo "self-signed certs generated — dev only, get real ones for prod"
 
 dev: setup
     #!/usr/bin/env bash
