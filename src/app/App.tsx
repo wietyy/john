@@ -39,7 +39,7 @@ export function App() {
                                 event.target.value,
                             );
                         }}
-                        className="h-full w-full resize-none bg-transparent p-3 text-sm text-white outline-none placeholder:text-gray-600"
+                        className="h-full w-full resize-none bg-transparent p-3 text-sm text-white outline-none"
                     />
                 </section>
 
