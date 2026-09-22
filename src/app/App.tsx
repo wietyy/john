@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ActionBar } from "./modules/ActionBar";
+import { FundsTable } from "./modules/FundsTable";
 import { SummaryArea } from "./modules/SummaryArea";
 import { TransactionTable, type Stats } from "./modules/TransactionTable";
 
@@ -11,20 +12,26 @@ function readNotes(): string {
 
 export function App() {
     const [isCreating, setIsCreating] = useState(false);
+    const [isCreatingFunds, setIsCreatingFunds] = useState(false);
     const [notes, setNotes] = useState<string>(readNotes);
     const [stats, setStats] = useState<Stats>({
         transactionTotal: 0,
         keyNumber: 0,
     });
+    const [fundsTotal, setFundsTotal] = useState(0);
 
     return (
         <div className="flex min-h-screen flex-col bg-gray-950 text-white">
-            <ActionBar onNewTransaction={() => setIsCreating(true)} />
+            <ActionBar
+                onNewTransaction={() => setIsCreating(true)}
+                onNewFund={() => setIsCreatingFunds(true)}
+            />
 
             <div className="grid flex-1 grid-cols-2 grid-rows-[2fr_3fr] gap-3 p-4">
                 <section className="overflow-auto rounded border border-gray-800 bg-gray-900/40">
                     <SummaryArea
                         uasm={stats.transactionTotal + stats.keyNumber}
+                        funds={fundsTotal}
                     />
                 </section>
 
@@ -50,8 +57,13 @@ export function App() {
                         onStatsChange={setStats}
                     />
                 </section>
-
-                <section className="rounded border border-gray-800 bg-gray-900/40" />
+                <section className="overflow-auto rounded border border-gray-800 bg-gray-900/40">
+                    <FundsTable
+                        isCreating={isCreatingFunds}
+                        onCloseCreate={() => setIsCreatingFunds(false)}
+                        onFundsChange={setFundsTotal}
+                    />
+                </section>
             </div>
         </div>
     );

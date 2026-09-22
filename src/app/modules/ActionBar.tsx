@@ -5,9 +5,10 @@ const DEFAULT_TITLE = "Untitled";
 
 type ActionBarProps = {
   onNewTransaction?: () => void;
+  onNewFund?: () => void;
 };
 
-export function ActionBar({ onNewTransaction }: ActionBarProps) {
+export function ActionBar({ onNewTransaction, onNewFund }: ActionBarProps) {
   const [title, setTitle] = useState(
     () => localStorage.getItem(TITLE_STORAGE_KEY) ?? DEFAULT_TITLE,
   );
@@ -40,11 +41,18 @@ export function ActionBar({ onNewTransaction }: ActionBarProps) {
           onClick={editTitle}
           className="cursor-pointer rounded px-2 py-0.5 text-lg font-semibold"
         >
-          {title}
+          {title}'s JOHN
         </h1>
       )}
 
       <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onNewFund}
+          className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+        >
+          New Fund
+        </button>
         <button
           type="button"
           onClick={onNewTransaction}
@@ -54,5 +62,8 @@ export function ActionBar({ onNewTransaction }: ActionBarProps) {
         </button>
       </div>
     </div>
+
+
+      // insert new fund button here, exact same look as new transaction button, bit of seperation between the two buttons.
   );
 }

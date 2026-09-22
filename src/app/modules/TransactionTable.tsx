@@ -52,12 +52,13 @@ const COLUMN_HEADINGS = [
   "Delete",
 ];
 
-const LABEL_CLASS = "block text-xs uppercase tracking-wide text-gray-400";
+export const LABEL_CLASS =
+  "block text-xs uppercase tracking-wide text-gray-400";
 
-const FIELD_CLASS =
+export const FIELD_CLASS =
   "w-full rounded bg-gray-800 px-2 py-1.5 text-sm text-white outline-none focus:ring-1 focus:ring-gray-500";
 
-const ICON_BUTTON =
+export const ICON_BUTTON =
   "inline-flex size-4 items-center justify-center text-gray-400 transition hover:text-white disabled:cursor-not-allowed disabled:text-gray-700";
 
 function readTransactions(): Transaction[] {
@@ -82,7 +83,7 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function NoteIcon() {
+export function NoteIcon() {
   return (
     <svg
       viewBox="0 0 16 16"
@@ -101,7 +102,7 @@ function NoteIcon() {
   );
 }
 
-function EditIcon() {
+export function EditIcon() {
   return (
     <svg
       viewBox="0 0 16 16"
@@ -119,7 +120,7 @@ function EditIcon() {
   );
 }
 
-function DeleteIcon() {
+export function DeleteIcon() {
   return (
     <svg
       viewBox="0 0 16 16"

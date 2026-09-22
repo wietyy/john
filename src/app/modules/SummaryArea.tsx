@@ -1,5 +1,6 @@
 type SummaryAreaProps = {
     uasm: number;
+    funds: number;
 };
 
 function SummaryRow({
@@ -32,14 +33,13 @@ function SummaryRow({
     );
 }
 
-export function SummaryArea({ uasm }: SummaryAreaProps) {
-    const funds = 0;
+export function SummaryArea({ uasm, funds }: SummaryAreaProps) {
     const total = uasm + funds;
 
     return (
         <div className="flex flex-col p-4">
             <SummaryRow label="UASM" value={uasm} />
-            <SummaryRow label="Funds" value={funds} muted />
+            <SummaryRow label="Funds" value={funds} />
             <SummaryRow label="Total" value={total} bold />
         </div>
     );
