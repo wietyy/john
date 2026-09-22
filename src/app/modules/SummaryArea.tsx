@@ -28,7 +28,7 @@ function SummaryRow({
             className={`flex items-center justify-between border-b border-gray-800 py-2 text-sm ${bold ? "font-semibold" : ""}`}
         >
             <span className="text-gray-400">{label}</span>
-            <span className={`tabular-nums ${valueColor}`}>{value}</span>
+            <span className={`tabular-nums ${valueColor}`}>${value}</span>
         </div>
     );
 }
