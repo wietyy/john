@@ -1,11 +1,10 @@
 import {
-  useEffect,
-  useRef,
-  useState,
-  type FormEvent,
-  type ReactNode,
+    useEffect,
+    useRef,
+    useState,
+    type FormEvent,
+    type ReactNode,
 } from "react";
-
 type Transaction = {
   id: number;
   date: string;
@@ -14,11 +13,24 @@ type Transaction = {
   note?: string;
 };
 
+export type Stats = {
+  transactionTotal: number;
+  keyNumber: number;
+};
+
+function sumTransactions(transactions: Transaction[]) {
+  return transactions.reduce(
+    (total, transaction) => total + transaction.amount,
+    0,
+  );
+}
+
 type TransactionDraft = Omit<Transaction, "id">;
 
 type TransactionTableProps = {
-  isCreating: boolean;
-  onCloseCreate: () => void;
+    isCreating: boolean;
+    onCloseCreate: () => void;
+    onStatsChange?: (stats: Stats) => void;
 };
 
 type TransactionModalProps = {
@@ -236,6 +248,7 @@ function TransactionModal({
 export function TransactionTable({
   isCreating,
   onCloseCreate,
+  onStatsChange,
 }: TransactionTableProps) {
   const [transactions, setTransactions] =
     useState<Transaction[]>(readTransactions);
@@ -245,6 +258,13 @@ export function TransactionTable({
   const [isEditingKeyNumber, setIsEditingKeyNumber] = useState(false);
   const [keyNumberDraft, setKeyNumberDraft] = useState(() => String(keyNumber));
   const [visibleNotes, setVisibleNotes] = useState<number[]>([]);
+
+  useEffect(() => {
+    onStatsChange?.({
+      transactionTotal: sumTransactions(transactions),
+      keyNumber,
+    });
+  }, [transactions, keyNumber, onStatsChange]);
 
   function persistTransaction(next: Transaction[]) {
     localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(next));
