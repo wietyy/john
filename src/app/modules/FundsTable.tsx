@@ -5,6 +5,7 @@ import {
     type FormEvent,
     type ReactNode,
 } from "react";
+import { getScopedStorageKey } from "./ActionBar";
 import {
     DeleteIcon,
     EditIcon,
@@ -25,6 +26,7 @@ type Fund = {
 type FundDraft = Omit<Fund, "id">;
 
 type FundsTableProps = {
+    johnId: number;
     isCreating: boolean;
     onCloseCreate: () => void;
     onFundsChange?: (total: number) => void;
@@ -49,8 +51,10 @@ const COLUMN_HEADINGS = [
     "Delete",
 ];
 
-function readFunds(): Fund[] {
-    const stored = localStorage.getItem(FUNDS_STORAGE_KEY);
+function readFunds(johnId: number): Fund[] {
+    const stored =
+        localStorage.getItem(getScopedStorageKey(FUNDS_STORAGE_KEY, johnId)) ??
+        (johnId === 1 ? localStorage.getItem(FUNDS_STORAGE_KEY) : null);
     if (!stored) return [];
 
     try {
@@ -167,11 +171,12 @@ function FundModal({ mode, fund, onSubmit, onClose }: FundModalProps) {
 }
 
 export function FundsTable({
+    johnId,
     isCreating,
     onCloseCreate,
     onFundsChange,
 }: FundsTableProps) {
-    const [funds, setFunds] = useState<Fund[]>(readFunds);
+    const [funds, setFunds] = useState<Fund[]>(() => readFunds(johnId));
     const [editingFund, setEditingFund] = useState<Fund | null>(null);
     const [visibleNotes, setVisibleNotes] = useState<number[]>([]);
 
@@ -180,7 +185,8 @@ export function FundsTable({
     }, [funds, onFundsChange]);
 
     function persistFunds(next: Fund[]) {
-        localStorage.setItem(FUNDS_STORAGE_KEY, JSON.stringify(next));
+        const key = getScopedStorageKey(FUNDS_STORAGE_KEY, johnId);
+        localStorage.setItem(key, JSON.stringify(next));
         return next;
     }
 

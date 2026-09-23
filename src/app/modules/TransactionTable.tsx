@@ -5,6 +5,8 @@ import {
     type FormEvent,
     type ReactNode,
 } from "react";
+import { getScopedStorageKey } from "./ActionBar";
+
 type Transaction = {
   id: number;
   date: string;
@@ -28,6 +30,7 @@ function sumTransactions(transactions: Transaction[]) {
 type TransactionDraft = Omit<Transaction, "id">;
 
 type TransactionTableProps = {
+    johnId: number;
     isCreating: boolean;
     onCloseCreate: () => void;
     onStatsChange?: (stats: Stats) => void;
@@ -61,8 +64,11 @@ export const FIELD_CLASS =
 export const ICON_BUTTON =
   "inline-flex size-4 items-center justify-center text-gray-400 transition hover:text-white disabled:cursor-not-allowed disabled:text-gray-700";
 
-function readTransactions(): Transaction[] {
-  const stored = localStorage.getItem(TRANSACTIONS_STORAGE_KEY);
+function readTransactions(johnId: number): Transaction[] {
+  const stored =
+    localStorage.getItem(getScopedStorageKey(TRANSACTIONS_STORAGE_KEY, johnId)) ??
+    (johnId === 1 ? localStorage.getItem(TRANSACTIONS_STORAGE_KEY) : null);
+
   if (!stored) return [];
 
   try {
@@ -73,10 +79,17 @@ function readTransactions(): Transaction[] {
   }
 }
 
-function readKeyNumber(): number {
-  const stored = localStorage.getItem(KEY_NUMBER_STORAGE_KEY);
+function readKeyNumber(johnId: number): number {
+  const stored =
+    localStorage.getItem(getScopedStorageKey(KEY_NUMBER_STORAGE_KEY, johnId)) ??
+    (johnId === 1 ? localStorage.getItem(KEY_NUMBER_STORAGE_KEY) : null);
   const parsed = Number(stored);
   return stored !== null && Number.isFinite(parsed) ? parsed : 0;
+}
+
+function writeKeyNumber(value: number, johnId: number): void {
+  const key = getScopedStorageKey(KEY_NUMBER_STORAGE_KEY, johnId);
+  localStorage.setItem(key, String(value));
 }
 
 function today() {
@@ -247,13 +260,14 @@ function TransactionModal({
 }
 
 export function TransactionTable({
+  johnId,
   isCreating,
   onCloseCreate,
   onStatsChange,
 }: TransactionTableProps) {
   const [transactions, setTransactions] =
-    useState<Transaction[]>(readTransactions);
-  const [keyNumber, setKeyNumber] = useState<number>(readKeyNumber);
+    useState<Transaction[]>(() => readTransactions(johnId));
+  const [keyNumber, setKeyNumber] = useState(() => readKeyNumber(johnId));
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
   const [isEditingKeyNumber, setIsEditingKeyNumber] = useState(false);
@@ -268,7 +282,8 @@ export function TransactionTable({
   }, [transactions, keyNumber, onStatsChange]);
 
   function persistTransaction(next: Transaction[]) {
-    localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(next));
+    const key = getScopedStorageKey(TRANSACTIONS_STORAGE_KEY, johnId);
+    localStorage.setItem(key, JSON.stringify(next));
     return next;
   }
 
@@ -307,8 +322,7 @@ export function TransactionTable({
   function editKeyNumber() {
     const next = Number(keyNumberDraft);
     const safe = Number.isFinite(next) ? next : 0;
-
-    localStorage.setItem(KEY_NUMBER_STORAGE_KEY, String(safe));
+    writeKeyNumber(safe, johnId);
     setKeyNumber(safe);
     setIsEditingKeyNumber(false);
   }
