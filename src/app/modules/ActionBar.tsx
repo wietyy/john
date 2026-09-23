@@ -20,6 +20,7 @@ type ActionBarProps = {
   onSwitchJohn: (johnId: number) => void;
   onCreateJohn: () => void;
   onRenameJohn: (johnId: number, name: string) => void;
+  onDeleteJohn: (johnId: number) => void;
   onNewTransaction?: () => void;
   onNewFund?: () => void;
 };
@@ -30,6 +31,7 @@ export function ActionBar({
   onSwitchJohn,
   onCreateJohn,
   onRenameJohn,
+  onDeleteJohn,
   onNewTransaction,
   onNewFund,
 }: ActionBarProps) {
@@ -51,6 +53,32 @@ export function ActionBar({
   function closeSwitchModal() {
     dialogRef.current?.close();
     setIsSwitching(false);
+  }
+
+  function requestDeleteJohn() {
+    if (johns.length <= 1) {
+      window.alert("Can't delete JOHN as there's only one JOHN in the JOHN");
+      return;
+    }
+
+    const roster = johns
+      .map((option) => `${option.id}: ${option.name}`)
+      .join("\n");
+    const answer = window.prompt(
+      `Which JOHN gets axed?\n\n${roster}\n\nEnter an id:`,
+    );
+    if (answer === null) return;
+
+    const targetId = Number(answer);
+    if (!johns.some((option) => option.id === targetId)) {
+      window.alert(`No JOHN found with id "${answer}"`);
+      return;
+    }
+
+    if (!window.confirm("Are you sure?")) return;
+
+    onDeleteJohn(targetId);
+    closeSwitchModal();
   }
 
   function startEditingName() {
@@ -143,6 +171,13 @@ export function ActionBar({
           <div className="flex items-center justify-between gap-2">
             <div className="text-xs text-gray-500">[ESC] exit</div>
             <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={requestDeleteJohn}
+                className="rounded px-3 py-1 text-sm font-medium text-red-400 hover:bg-gray-800 hover:text-red-300"
+              >
+                Delete
+              </button>
               <button
                 type="button"
                 onClick={closeSwitchModal}

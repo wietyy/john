@@ -138,6 +138,26 @@ export function App() {
         });
     }
 
+    function deleteJohn(johnId: number): void {
+        if (johns.length <= 1) return;
+
+        const next = johns.filter((john) => john.id !== johnId);
+        localStorage.setItem(JOHN_STORAGE_KEY, JSON.stringify(next));
+        setJohns(next);
+
+        for (const key of [NOTES_STORAGE_KEY, "transactions", "keyNum", "funds"]) {
+            localStorage.removeItem(getScopedStorageKey(key, johnId));
+        }
+
+        if (johnId === currentJohnId) {
+            const fallbackId = next.some((john) => john.id === 1)
+                ? 1
+                : next[0].id;
+            localStorage.setItem(CURRENT_JOHN_ID_STORAGE_KEY, String(fallbackId));
+            setCurrentJohnId(fallbackId);
+        }
+    }
+
     if (!currentJohn) return null;
 
     return (
@@ -148,6 +168,7 @@ export function App() {
                 onSwitchJohn={selectJohn}
                 onCreateJohn={createJohn}
                 onRenameJohn={renameJohn}
+                onDeleteJohn={deleteJohn}
                 onNewTransaction={() => setIsCreating(true)}
                 onNewFund={() => setIsCreatingFunds(true)}
             />
