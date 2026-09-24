@@ -111,35 +111,36 @@ export function ActionBar({
 
   return (
     <div className="flex items-center justify-between gap-4 bg-gray-900 px-4 py-2 text-white">
-      {isEditingName ? (
-        <input
-          autoFocus
-          value={nameDraft}
-          onChange={(event) => setNameDraft(event.target.value)}
-          onBlur={saveName}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") event.currentTarget.blur();
-          }}
-          className="rounded bg-gray-800 px-2 py-0.5 text-lg font-semibold text-white outline-none"
-        />
-      ) : (
-        <h1
-          onClick={startEditingName}
-          className="cursor-pointer rounded px-2 py-0.5 text-lg font-semibold"
-        >
-          {john.name} JOHN
-        </h1>
-      )}
-
-      {!loginStatus && (
-        <button
-          type="button"
-          onClick={login}
-          className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
-        >
-          Login
-        </button>
-      )}
+      <div className="flex items-center gap-2">
+        {isEditingName ? (
+          <input
+            autoFocus
+            value={nameDraft}
+            onChange={(event) => setNameDraft(event.target.value)}
+            onBlur={saveName}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.currentTarget.blur();
+            }}
+            className="rounded bg-gray-800 px-2 py-0.5 text-lg font-semibold text-white outline-none"
+          />
+        ) : (
+          <h1
+            onClick={startEditingName}
+            className="cursor-pointer rounded px-2 py-0.5 text-lg font-semibold"
+          >
+            {john.name} JOHN
+          </h1>
+        )}
+        {!loginStatus && (
+          <button
+            type="button"
+            onClick={login}
+            className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+          >
+            Login
+          </button>
+        )}
+      </div>
 
 
       <div className="flex flex-wrap items-center gap-2">
