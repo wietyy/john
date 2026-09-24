@@ -39,6 +39,20 @@ export function ActionBar({
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(john.name);
   const [isSwitching, setIsSwitching] = useState(false);
+  const [loginStatus, setLoginStatus] = useState(false);
+
+  function login() {
+    if (localStorage.getItem("loginKey")) {
+      setLoginStatus(true);
+    } else {
+      const key = window.prompt(
+        "Enter your secret key. This should be something no one can possibly guess.",
+      );
+      if (key === null) return;
+      localStorage.setItem("loginKey", key);
+      setLoginStatus(true);
+    }
+  }
 
   useEffect(() => {
     if (isSwitching) {
@@ -116,6 +130,17 @@ export function ActionBar({
           {john.name} JOHN
         </h1>
       )}
+
+      {!loginStatus && (
+        <button
+          type="button"
+          onClick={login}
+          className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+        >
+          Login
+        </button>
+      )}
+
 
       <div className="flex flex-wrap items-center gap-2">
         <button
