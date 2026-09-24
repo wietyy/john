@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { getCloud, setCloud } from "../cloud";
+import { useEffect, useRef, useState } from "react";
 
 export const JOHN_STORAGE_KEY = "johns";
 export const CURRENT_JOHN_ID_STORAGE_KEY = "currentJohnId";
@@ -46,37 +45,6 @@ export function ActionBar({
       dialogRef.current?.showModal();
     }
   }, [isSwitching]);
-
-  const onLoad = useCallback(async () => {
-    const cloudData = await getCloud();
-    if (cloudData) {
-      try {
-        const parsed = JSON.parse(cloudData);
-        Object.entries(parsed).forEach(([key, value]) => {
-          localStorage.setItem(key, value as string);
-        });
-      } catch {
-        // ignore parse errors
-      }
-    }
-  }, []);
-
-  const sendToCloud = useCallback(async () => {
-    const dataToSync: Record<string, string> = {};
-    (["johns", "currentJohnId", "documentTitle"] as const).forEach((key) => {
-      const value = localStorage.getItem(key);
-      if (value !== null) {
-        dataToSync[key] = value;
-      }
-    });
-    await setCloud(JSON.stringify(dataToSync));
-  }, []);
-
-  useEffect(() => {
-    onLoad();
-    const intervalId = setInterval(sendToCloud, 5000);
-    return () => clearInterval(intervalId);
-  }, [onLoad, sendToCloud]);
 
   function openSwitchModal() {
     setIsSwitching(true);
