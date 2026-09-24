@@ -1,31 +1,42 @@
 import { Database } from 'bun:sqlite';
 import { env } from 'process';
+import bcrypt from 'bcrypt';
 
 const db = new Database(env.DATABASE as string);
 
 db.run(`CREATE TABLE IF NOT EXISTS main (
     id INTEGER PRIMARY KEY,
-    keyhash TEXT UNIQUE,
+    password_hash TEXT,
     userdata TEXT
 )`);
 
-const getStatement = db.prepare('SELECT userdata FROM main WHERE keyhash == ?');
-const checkStatement = db.prepare('SELECT id FROM main WHERE keyhash == ?');
-const insertStatement = db.prepare('INSERT INTO main (keyhash, userdata) VALUES (?, ?)');
-const updateStatement = db.prepare('UPDATE main SET userdata = ? WHERE keyhash == ?');
-
-export function getData(key: string): string {
-    const row = getStatement.get(key) as { userdata: string } | undefined;
-    return row ? row.userdata : '';
+export function getData(password: string): string {
+    const rows = db.prepare('SELECT userdata, password_hash FROM main').all() as Array<{ userdata: string, password_hash: string }>;
+    for (const row of rows) {
+        if (bcrypt.compareSync(password, row.password_hash)) {
+            return row.userdata;
+        }
+    }
+    return '';
 }
 
-export function setData(key: string, data: string): string {
+export function setData(password: string, data: string): string {
     try {
-        const row = checkStatement.get(key) as { id: number } | undefined;
-        if (!row) {
-            insertStatement.run(key, data);
+        const rows = db.prepare('SELECT id, password_hash FROM main').all() as Array<{ id: number, password_hash: string }>;
+        let existingId: number | null = null;
+        
+        for (const row of rows) {
+            if (bcrypt.compareSync(password, row.password_hash)) {
+                existingId = row.id;
+                break;
+            }
+        }
+        
+        if (!existingId) {
+            const hash = bcrypt.hashSync(password, 12);
+            db.prepare('INSERT INTO main (password_hash, userdata) VALUES (?, ?)').run(hash, data);
         } else {
-            updateStatement.run(data, key);
+            db.prepare('UPDATE main SET userdata = ? WHERE id = ?').run(data, existingId);
         }
         return 'success';
     } catch (error) {

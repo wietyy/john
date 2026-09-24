@@ -1,5 +1,5 @@
 CREATE TABLE main (
     id PRIMARY KEY,
-    keyhash TEXT,
+    password_hash TEXT,
     userdata TEXT
 );
