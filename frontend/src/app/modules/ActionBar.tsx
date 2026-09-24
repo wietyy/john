@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { getCloud, setCloud } from "../cloud";
 
 export const JOHN_STORAGE_KEY = "johns";
 export const CURRENT_JOHN_ID_STORAGE_KEY = "currentJohnId";
@@ -39,6 +40,20 @@ export function ActionBar({
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(john.name);
   const [isSwitching, setIsSwitching] = useState(false);
+  const [loginStatus, setLoginStatus] = useState(false);
+
+  function login() {
+    if (localStorage.getItem("loginKey")) {
+      setLoginStatus(true);
+    } else {
+      const key = window.prompt(
+        "Enter your secret key. This should be something no one can possibly guess.",
+      );
+      if (key === null) return;
+      localStorage.setItem("loginKey", key);
+      setLoginStatus(true);
+    }
+  }
 
   useEffect(() => {
     if (isSwitching) {
@@ -97,25 +112,75 @@ export function ActionBar({
 
   return (
     <div className="flex items-center justify-between gap-4 bg-gray-900 px-4 py-2 text-white">
-      {isEditingName ? (
-        <input
-          autoFocus
-          value={nameDraft}
-          onChange={(event) => setNameDraft(event.target.value)}
-          onBlur={saveName}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") event.currentTarget.blur();
-          }}
-          className="rounded bg-gray-800 px-2 py-0.5 text-lg font-semibold text-white outline-none"
-        />
-      ) : (
-        <h1
-          onClick={startEditingName}
-          className="cursor-pointer rounded px-2 py-0.5 text-lg font-semibold"
-        >
-          {john.name} JOHN
-        </h1>
-      )}
+      <div className="flex items-center gap-2">
+        {isEditingName ? (
+          <input
+            autoFocus
+            value={nameDraft}
+            onChange={(event) => setNameDraft(event.target.value)}
+            onBlur={saveName}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.currentTarget.blur();
+            }}
+            className="rounded bg-gray-800 px-2 py-0.5 text-lg font-semibold text-white outline-none"
+          />
+        ) : (
+          <h1
+            onClick={startEditingName}
+            className="cursor-pointer rounded px-2 py-0.5 text-lg font-semibold"
+          >
+            {john.name} JOHN
+          </h1>
+        )}
+        {loginStatus ? (
+          <>
+            <button
+              type="button"
+              onClick={async () => {
+                const dataToSend: Record<string, string> = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                  const key = localStorage.key(i);
+                  if (key && key !== "loginKey") {
+                    dataToSend[key] = localStorage.getItem(key) || "";
+                  }
+                }
+                await setCloud(localStorage.getItem("loginKey") || "", JSON.stringify(dataToSend));
+                alert("Data synced to cloud successfully!");
+              }}
+              className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+            >
+              Write Cloud
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                const data = await getCloud(localStorage.getItem("loginKey") || "");
+                try {
+                  const parsedData = JSON.parse(data);
+                  for (const key in parsedData) {
+                    localStorage.setItem(key, parsedData[key]);
+                  }
+                } catch (e) {
+                  // If parsing fails, just set the raw data
+                  localStorage.setItem(JOHN_STORAGE_KEY, data);
+                }
+                window.location.reload();
+              }}
+              className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+            >
+              Load Cloud
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={login}
+            className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+          >
+            Login
+          </button>
+        )}
+      </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <button

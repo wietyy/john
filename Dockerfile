@@ -1,12 +1,17 @@
+# Build stage
 FROM oven/bun AS build
 WORKDIR /app
 COPY . .
-RUN bun run build
+RUN cd frontend && bun install && bun run build
 
-
-FROM nginx
+# Run stage
+FROM oven/bun AS run
 WORKDIR /app
-COPY --from=build /app/dist /app
-RUN echo 'server { listen 80; root /app; }' > /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+RUN apt-get update && apt-get install -y sqlite3
+COPY --from=build /app/frontend/dist ./frontend/dist
+COPY --from=build /app/backend ./backend
+COPY --from=build /app/schema.sql ./schema.sql
+RUN mkdir -p /db/
+RUN cat /app/schema.sql | sqlite3 /db/database.db
+ENV DATABASE=/db/database.db
+CMD ["bun", "run", "./backend/src/index.ts"]
