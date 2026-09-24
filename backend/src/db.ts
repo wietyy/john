@@ -3,6 +3,12 @@ import { env } from 'process';
 
 const db = new Database(env.DATABASE as string);
 
+db.run(`CREATE TABLE IF NOT EXISTS main (
+    id INTEGER PRIMARY KEY,
+    keyhash TEXT UNIQUE,
+    userdata TEXT
+)`);
+
 const getStatement = db.prepare('SELECT userdata FROM main WHERE keyhash == ?');
 const checkStatement = db.prepare('SELECT id FROM main WHERE keyhash == ?');
 const insertStatement = db.prepare('INSERT INTO main (keyhash, userdata) VALUES (?, ?)');

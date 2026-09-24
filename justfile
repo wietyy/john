@@ -14,7 +14,7 @@ setupdb dbfile:
     @echo "Database Setup Complete (or should be)"
 
 dev: 
-    @just start database.db 8080
+    @just start database.db 3000
 
 ship commit:
     @git add .
