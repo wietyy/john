@@ -1,6 +1,6 @@
 export async function getCloud(password: string): Promise<string> {
     const response = await fetch("/api/getCloudData", {
-        method: "GET",
+        method: "POST",
         headers: {
             "Content-Type": "application/json",
         },

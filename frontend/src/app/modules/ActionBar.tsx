@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { getCloud, setCloud } from "../cloud";
 
 export const JOHN_STORAGE_KEY = "johns";
 export const CURRENT_JOHN_ID_STORAGE_KEY = "currentJohnId";
@@ -131,7 +132,46 @@ export function ActionBar({
             {john.name} JOHN
           </h1>
         )}
-        {!loginStatus && (
+        {loginStatus ? (
+          <>
+            <button
+              type="button"
+              onClick={async () => {
+                const dataToSend: Record<string, string> = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                  const key = localStorage.key(i);
+                  if (key && key !== "loginKey") {
+                    dataToSend[key] = localStorage.getItem(key) || "";
+                  }
+                }
+                await setCloud(localStorage.getItem("loginKey") || "", JSON.stringify(dataToSend));
+                alert("Data synced to cloud successfully!");
+              }}
+              className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+            >
+              Write Cloud
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                const data = await getCloud(localStorage.getItem("loginKey") || "");
+                try {
+                  const parsedData = JSON.parse(data);
+                  for (const key in parsedData) {
+                    localStorage.setItem(key, parsedData[key]);
+                  }
+                } catch (e) {
+                  // If parsing fails, just set the raw data
+                  localStorage.setItem(JOHN_STORAGE_KEY, data);
+                }
+                window.location.reload();
+              }}
+              className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+            >
+              Load Cloud
+            </button>
+          </>
+        ) : (
           <button
             type="button"
             onClick={login}
@@ -141,7 +181,6 @@ export function ActionBar({
           </button>
         )}
       </div>
-
 
       <div className="flex flex-wrap items-center gap-2">
         <button

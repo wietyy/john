@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json());
 app.use(express.static('frontend/dist'));
 
-app.get('/api/getCloudData', (req, res) => {
+app.post('/api/getCloudData', (req, res) => {
     const password = req.body.password;
     const data = getData(password);
     res.json({ data });
