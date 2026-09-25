@@ -1,23 +1,47 @@
 export async function getCloud(password: string): Promise<string> {
-    const response = await fetch("/api/getCloudData", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ password }),
-    });
-    const data = await response.json();
-    return data.data ?? "";
+    const endpoint = "/api/getCloudData";
+    const method = "POST";
+    const contentType = "Content-Type";
+    const jsonType = "application/json";
+    const headers = {
+      [contentType]: jsonType,
+    };
+    const requestBody = { password };
+    const body = JSON.stringify(requestBody);
+    const requestOptions = {
+      method: method,
+      headers: headers,
+      body: body,
+    };
+
+    const response = await fetch(endpoint, requestOptions);
+    const jsonResponse = await response.json();
+    const responseData = jsonResponse.data;
+    const data = responseData ?? "";
+
+    return data;
 }
 
 export async function setCloud(password: string, data: string): Promise<string> {
-    const response = await fetch("/api/setCloudData", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ password, data }),
-    });
-    const result = await response.json();
-    return result.result ?? "error";
+    const endpoint = "/api/setCloudData";
+    const method = "POST";
+    const contentType = "Content-Type";
+    const jsonType = "application/json";
+    const headers = {
+      [contentType]: jsonType,
+    };
+    const requestBody = { password, data };
+    const body = JSON.stringify(requestBody);
+    const requestOptions = {
+      method: method,
+      headers: headers,
+      body: body,
+    };
+
+    const response = await fetch(endpoint, requestOptions);
+    const jsonResponse = await response.json();
+    const responseResult = jsonResponse.result;
+    const result = responseResult ?? "error";
+
+    return result;
 }

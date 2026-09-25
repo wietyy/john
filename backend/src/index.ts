@@ -15,16 +15,28 @@ app.use(express.static('frontend/dist'));
 app.use(limiter);
 
 app.post('/api/getCloudData', (req, res) => {
-    const password = req.body.password;
+    const requestBody = req.body;
+    const password = requestBody.password;
     const data = getData(password);
-    res.json({ data });
+    const responseBody = { data };
+    res.json(responseBody);
 });
 
 app.post('/api/setCloudData', (req, res) => {
-    res.json({ result: setData(req.body.password, req.body.data) });
+    const requestBody = req.body;
+    const requestPassword = requestBody.password;
+    const requestData = requestBody.data;
+    const result = setData(requestPassword, requestData);
+    const responseBody = { result };
+    res.json(responseBody);
 });
 
-const PORT = process.env.PORT ?? '3000';
-app.listen(Number(PORT), () => {
-    console.log(`Server running on port ${PORT}`);
+const defaultPort = '3000';
+const envPort = process.env.PORT;
+const portString = envPort ?? defaultPort;
+const portNumber = Number(portString);
+
+const server = app.listen(portNumber, () => {
+    const message = `Server running on port ${portString}`;
+    console.log(message);
 });

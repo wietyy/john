@@ -52,46 +52,89 @@ const COLUMN_HEADINGS = [
 ];
 
 function readFunds(johnId: number): Fund[] {
-    const stored =
-        localStorage.getItem(getScopedStorageKey(FUNDS_STORAGE_KEY, johnId)) ??
-        (johnId === 1 ? localStorage.getItem(FUNDS_STORAGE_KEY) : null);
-    if (!stored) return [];
+    const scopedKey = getScopedStorageKey(FUNDS_STORAGE_KEY, johnId);
+    const stored = localStorage.getItem(scopedKey);
+
+    const isFirstJohn = johnId === 1;
+    const firstJohnKey = FUNDS_STORAGE_KEY;
+
+    const finalStored = stored ?? (isFirstJohn ? localStorage.getItem(firstJohnKey) : null);
+
+    if (!finalStored) {
+        return [];
+    }
 
     try {
-        const parsed: unknown = JSON.parse(stored);
-        return Array.isArray(parsed) ? (parsed as Fund[]) : [];
+        const parsed: unknown = JSON.parse(finalStored);
+        const isArray = Array.isArray(parsed);
+        return isArray ? (parsed as Fund[]) : [];
     } catch {
         return [];
     }
 }
 
-function sumFunds(funds: Fund[]) {
-    return funds.reduce((total, fund) => total + fund.amount, 0);
+function sumFunds(funds: Fund[]): number {
+    const initialTotal = 0;
+    const total = funds.reduce((sum, fund) => {
+        const fundAmount = fund.amount;
+        return sum + fundAmount;
+    }, initialTotal);
+    return total;
 }
 
 function FundModal({ mode, fund, onSubmit, onClose }: FundModalProps) {
     const dialogRef = useRef<HTMLDialogElement>(null);
-    const [title, setTitle] = useState(() => fund?.title ?? "");
-    const [amount, setAmount] = useState(() =>
-        fund ? String(fund.amount) : "",
-    );
-    const [goal, setGoal] = useState(() => (fund ? String(fund.goal) : ""));
-    const [note, setNote] = useState(() => fund?.note ?? "");
+    const [title, setTitle] = useState(() => {
+        const fundTitle = fund?.title;
+        return fundTitle ?? "";
+    });
+    const [amount, setAmount] = useState(() => {
+        const hasFund = fund !== undefined;
+        if (hasFund) {
+            const fundAmount = fund.amount;
+            return String(fundAmount);
+        }
+        return "";
+    });
+    const [goal, setGoal] = useState(() => {
+        const hasFund = fund !== undefined;
+        if (hasFund) {
+            const fundGoal = fund.goal;
+            return String(fundGoal);
+        }
+        return "";
+    });
+    const [note, setNote] = useState(() => {
+        const fundNote = fund?.note;
+        return fundNote ?? "";
+    });
 
     useEffect(() => {
-        dialogRef.current?.showModal();
+        const dialogElement = dialogRef.current;
+        dialogElement?.showModal();
     }, []);
 
     function submitFund(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        onSubmit({
-            title,
+
+        const trimmedNote = note.trim();
+        const noteOrNull = trimmedNote || undefined;
+
+        const draft: FundDraft = {
+            title: title,
             amount: Number(amount),
             goal: Number(goal),
-            note: note.trim() || undefined,
-        });
-        dialogRef.current?.close();
+            note: noteOrNull,
+        };
+
+        onSubmit(draft);
+        const dialogElement = dialogRef.current;
+        dialogElement?.close();
     }
+
+    const isEditMode = mode === "edit";
+    const dialogTitle = isEditMode ? "Edit Fund" : "New Fund";
+    const submitButtonText = isEditMode ? "Save" : "Create";
 
     return (
         <dialog
@@ -101,7 +144,7 @@ function FundModal({ mode, fund, onSubmit, onClose }: FundModalProps) {
         >
             <form className="flex flex-col gap-4" onSubmit={submitFund}>
                 <h2 className="text-lg font-semibold">
-                    {mode === "create" ? "New Fund" : "Edit Fund"}
+                    {dialogTitle}
                 </h2>
 
                 <label className="flex flex-col gap-1">
@@ -153,7 +196,10 @@ function FundModal({ mode, fund, onSubmit, onClose }: FundModalProps) {
                 <div className="flex justify-end gap-2 pt-2">
                     <button
                         type="button"
-                        onClick={() => dialogRef.current?.close()}
+                        onClick={() => {
+                            const dialogElement = dialogRef.current;
+                            dialogElement?.close();
+                        }}
                         className="rounded px-3 py-1 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white"
                     >
                         Cancel
@@ -162,7 +208,7 @@ function FundModal({ mode, fund, onSubmit, onClose }: FundModalProps) {
                         type="submit"
                         className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
                     >
-                        {mode === "create" ? "Create" : "Save"}
+                        {submitButtonText}
                     </button>
                 </div>
             </form>
@@ -176,70 +222,87 @@ export function FundsTable({
     onCloseCreate,
     onFundsChange,
 }: FundsTableProps) {
-    const [funds, setFunds] = useState<Fund[]>(() => readFunds(johnId));
+    const initialFunds = readFunds(johnId);
+    const [funds, setFunds] = useState<Fund[]>(() => initialFunds);
     const [editingFund, setEditingFund] = useState<Fund | null>(null);
     const [visibleNotes, setVisibleNotes] = useState<number[]>([]);
 
     useEffect(() => {
-        onFundsChange?.(sumFunds(funds));
+        const totalAmount = sumFunds(funds);
+        onFundsChange?.(totalAmount);
     }, [funds, onFundsChange]);
 
-    function persistFunds(next: Fund[]) {
-        const key = getScopedStorageKey(FUNDS_STORAGE_KEY, johnId);
-        localStorage.setItem(key, JSON.stringify(next));
+    function persistFunds(next: Fund[]): Fund[] {
+        const scopedKey = getScopedStorageKey(FUNDS_STORAGE_KEY, johnId);
+        const jsonData = JSON.stringify(next);
+        localStorage.setItem(scopedKey, jsonData);
         return next;
     }
 
     function createFund(draft: FundDraft) {
         setFunds((current) => {
-            const nextId =
-                current.reduce(
-                    (highest, fund) => Math.max(highest, fund.id),
-                    -1,
-                ) + 1;
+            const calculateMaxId = (highest: number, fundItem: Fund) => {
+                const fundId = fundItem.id;
+                return Math.max(highest, fundId);
+            };
+            const nextId = current.reduce(calculateMaxId, -1) + 1;
 
-            return persistFunds([...current, { id: nextId, ...draft }]);
+            const newFund = { id: nextId, ...draft };
+            const updatedList = [...current, newFund];
+            return persistFunds(updatedList);
         });
     }
 
     function updateFund(fundId: number, draft: FundDraft) {
-        setFunds((current) =>
-            persistFunds(
-                current.map((fund) =>
-                    fund.id === fundId ? { ...draft, id: fundId } : fund,
-                ),
-            ),
-        );
+        setFunds((current) => {
+            const updateFundItem = (fundItem: Fund) => {
+                const isMatchingId = fundItem.id === fundId;
+                if (isMatchingId) {
+                    return { ...draft, id: fundId };
+                }
+                return fundItem;
+            };
+            const updatedList = current.map(updateFundItem);
+            return persistFunds(updatedList);
+        });
     }
 
     function deleteFund(fundId: number) {
-        setFunds((current) =>
-            persistFunds(
-                current.filter((fund) => fund.id !== fundId),
-            ),
-        );
+        setFunds((current) => {
+            const isNotDeleted = (fundItem: Fund) => {
+                return fundItem.id !== fundId;
+            };
+            const updatedList = current.filter(isNotDeleted);
+            return persistFunds(updatedList);
+        });
     }
 
     function editFund(fundId: number) {
-        setEditingFund(
-            funds.find((fund) => fund.id === fundId) ?? null,
-        );
+        const foundFund = funds.find((fundItem) => fundItem.id === fundId);
+        const fundOrNull = foundFund ?? null;
+        setEditingFund(fundOrNull);
     }
 
     function toggleNote(fundId: number) {
-        setVisibleNotes((current) =>
-            current.includes(fundId)
-                ? current.filter((id) => id !== fundId)
-                : [...current, fundId],
-        );
+        setVisibleNotes((current) => {
+            const containsId = current.includes(fundId);
+            if (containsId) {
+                return current.filter((id) => id !== fundId);
+            }
+            return [...current, fundId];
+        });
     }
 
     function submitFund(draft: FundDraft) {
-        if (editingFund) {
-            updateFund(editingFund.id, draft);
+        const hasEditingFund = editingFund !== null;
+
+        if (hasEditingFund) {
+            const editingFundId = editingFund.id;
+            updateFund(editingFundId, draft);
         } else {
             createFund(draft);
         }
+
         setEditingFund(null);
         onCloseCreate();
     }
@@ -249,28 +312,51 @@ export function FundsTable({
         onCloseCreate();
     }
 
-    const modal = editingFund
-        ? { mode: "edit" as const, fund: editingFund }
-        : isCreating
-          ? { mode: "create" as const, fund: undefined }
-          : null;
+    const hasEditingFund = editingFund !== null;
+    const hasIsCreating = isCreating;
 
-    const sorted = [...funds].sort((a, b) => a.id - b.id);
+    let modal: { mode: "edit" | "create"; fund: Fund } | null = null;
+
+    if (hasEditingFund) {
+        const editFundItem = editingFund;
+        modal = { mode: "edit", fund: editFundItem };
+    } else if (hasIsCreating) {
+        modal = { mode: "create", fund: undefined! };
+    } else {
+        modal = null;
+    }
+
+    const unsortedFunds = funds;
+    const sortedFunds = [...unsortedFunds].sort((a, b) => a.id - b.id);
 
     const rows: ReactNode[] = [];
-    sorted.forEach((fund) => {
-        const isNoteVisible = visibleNotes.includes(fund.id);
+
+    sortedFunds.forEach((fund) => {
+        const fundId = fund.id;
+        const isNoteVisible = visibleNotes.includes(fundId);
+
+        const toggleNoteHandler = () => toggleNote(fundId);
+        const editFundHandler = () => editFund(fundId);
+        const deleteFundHandler = () => deleteFund(fundId);
+
         const overUnder = fund.amount - fund.goal;
-        const overUnderColor =
-            overUnder > 0
-                ? "text-green-500"
-                : overUnder < 0
-                  ? "text-red-500"
-                  : "text-white";
+        const isOver = overUnder > 0;
+        const isUnder = overUnder < 0;
+
+        let overUnderColor = "text-white";
+
+        if (isOver) {
+            overUnderColor = "text-green-500";
+        } else if (isUnder) {
+            overUnderColor = "text-red-500";
+        }
+
+        const hasNote = fund.note !== undefined;
+        const noteText = hasNote ? fund.note! : "";
 
         rows.push(
             <tr
-                key={fund.id}
+                key={fundId}
                 className="border-b border-gray-800 transition hover:bg-gray-900/60"
             >
                 <td className="px-2 py-2 text-sm">{fund.title}</td>
@@ -289,8 +375,8 @@ export function FundsTable({
                     <button
                         type="button"
                         aria-label="Show note"
-                        disabled={!fund.note}
-                        onClick={() => toggleNote(fund.id)}
+                        disabled={!hasNote}
+                        onClick={toggleNoteHandler}
                         className={ICON_BUTTON}
                     >
                         <NoteIcon />
@@ -300,7 +386,7 @@ export function FundsTable({
                     <button
                         type="button"
                         aria-label="Edit fund"
-                        onClick={() => editFund(fund.id)}
+                        onClick={editFundHandler}
                         className={ICON_BUTTON}
                     >
                         <EditIcon />
@@ -310,7 +396,7 @@ export function FundsTable({
                     <button
                         type="button"
                         aria-label="Delete fund"
-                        onClick={() => deleteFund(fund.id)}
+                        onClick={deleteFundHandler}
                         className="inline-flex size-4 items-center justify-center text-red-500 transition hover:text-red-300"
                     >
                         <DeleteIcon />
@@ -319,55 +405,70 @@ export function FundsTable({
             </tr>,
         );
 
-        if (isNoteVisible && fund.note) {
+        if (isNoteVisible && hasNote) {
+            const noteKey = `${fundId}-note`;
+
             rows.push(
                 <tr
-                    key={`${fund.id}-note`}
+                    key={noteKey}
                     className="border-b border-gray-800"
                 >
                     <td
                         colSpan={COLUMN_HEADINGS.length}
                         className="bg-gray-900/40 px-2 py-2 text-sm text-gray-400"
                     >
-                        {fund.note}
+                        {noteText}
                     </td>
                 </tr>,
             );
         }
     });
 
+    function getHeaderClass(heading: string): string {
+        const isTitle = heading === "Title";
+        const isNumber = heading === "Amount" || heading === "Goal" || heading === "O/U";
+
+        if (isTitle) {
+            return "px-2 py-2 text-left";
+        }
+
+        if (isNumber) {
+            return "px-2 py-2 text-right";
+        }
+
+        return "px-2 py-2 text-center";
+    }
+
+    const headingCount = COLUMN_HEADINGS.length;
+    const hasRows = rows.length > 0;
+
     return (
         <div className="p-4">
             <table className="w-full border-collapse text-left">
                 <thead>
                     <tr className="border-b border-gray-700 text-xs uppercase tracking-wide text-gray-500">
-                        {COLUMN_HEADINGS.map((heading) => (
-                            <th
-                                key={heading}
-                                scope="col"
-                                className={
-                                    heading === "Title"
-                                        ? "px-2 py-2 text-left"
-                                        : heading === "Amount" ||
-                                            heading === "Goal" ||
-                                            heading === "O/U"
-                                          ? "px-2 py-2 text-right"
-                                          : "px-2 py-2 text-center"
-                                }
-                            >
-                                {heading}
-                            </th>
-                        ))}
+                        {COLUMN_HEADINGS.map((heading) => {
+                            const headerClass = getHeaderClass(heading);
+                            return (
+                                <th
+                                    key={heading}
+                                    scope="col"
+                                    className={headerClass}
+                                >
+                                    {heading}
+                                </th>
+                            );
+                        })}
                     </tr>
                 </thead>
 
                 <tbody>
-                    {rows.length > 0 ? (
+                    {hasRows ? (
                         rows
                     ) : (
                         <tr className="border-b border-gray-800">
                             <td
-                                colSpan={COLUMN_HEADINGS.length}
+                                colSpan={headingCount}
                                 className="px-2 py-6 text-center text-sm text-gray-500"
                             >
                                 No funds yet.
@@ -379,11 +480,7 @@ export function FundsTable({
 
             {modal && (
                 <FundModal
-                    key={
-                        modal.mode === "edit"
-                            ? `edit-${modal.fund.id}`
-                            : "create"
-                    }
+                    key={modal.mode === "edit" ? `edit-${modal.fund.id}` : "create"}
                     mode={modal.mode}
                     fund={modal.fund}
                     onSubmit={submitFund}

@@ -14,33 +14,48 @@ function SummaryRow({
     muted?: boolean;
     bold?: boolean;
 }) {
-    const valueColor =
-        value > 0
-            ? "text-green-500"
-            : value < 0
-              ? "text-red-500"
-              : muted
-                ? "text-gray-600"
-                : "text-white";
+    const isPositive = value > 0;
+    const isNegative = value < 0;
+    const isMuted = muted ?? false;
+
+    let valueColor = "text-white";
+
+    if (isPositive) {
+        valueColor = "text-green-500";
+    } else if (isNegative) {
+        valueColor = "text-red-500";
+    } else if (isMuted) {
+        valueColor = "text-gray-600";
+    }
+
+    const hasBold = bold ?? false;
+    const fontWeight = hasBold ? "font-semibold" : "";
+    const baseClassName = "flex items-center justify-between border-b border-gray-800 py-2 text-sm";
+    const className = `${baseClassName} ${fontWeight}`;
+
+    const formattedValue = `$${value}`;
+    const valueClassName = `tabular-nums ${valueColor}`;
 
     return (
         <div
-            className={`flex items-center justify-between border-b border-gray-800 py-2 text-sm ${bold ? "font-semibold" : ""}`}
+            className={className}
         >
             <span className="text-gray-400">{label}</span>
-            <span className={`tabular-nums ${valueColor}`}>${value}</span>
+            <span className={valueClassName}>{formattedValue}</span>
         </div>
     );
 }
 
 export function SummaryArea({ uasm, funds }: SummaryAreaProps) {
-    const total = uasm + funds;
+    const uasmTotal = uasm;
+    const fundsTotal = funds;
+    const combinedTotal = uasmTotal + fundsTotal;
 
     return (
         <div className="flex flex-col p-4">
-            <SummaryRow label="UASM" value={uasm} />
-            <SummaryRow label="Funds" value={funds} />
-            <SummaryRow label="Total" value={total} bold />
+            <SummaryRow label="UASM" value={uasmTotal} />
+            <SummaryRow label="Funds" value={fundsTotal} />
+            <SummaryRow label="Total" value={combinedTotal} bold />
         </div>
     );
 }

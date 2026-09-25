@@ -12,7 +12,9 @@ export type John = {
 };
 
 export function getScopedStorageKey(baseKey: string, johnId: number): string {
-  return `${baseKey}-${johnId}`;
+  const separator = '-';
+  const key = `${baseKey}${separator}${johnId}`;
+  return key;
 }
 
 type ActionBarProps = {
@@ -43,21 +45,28 @@ export function ActionBar({
   const [loginStatus, setLoginStatus] = useState(false);
 
   function login() {
-    if (localStorage.getItem("loginKey")) {
+    const existingKey = localStorage.getItem("loginKey");
+
+    if (existingKey) {
       setLoginStatus(true);
     } else {
-      const key = window.prompt(
-        "Enter your secret key. This should be something no one can possibly guess.",
-      );
-      if (key === null) return;
-      localStorage.setItem("loginKey", key);
+      const promptMessage = "Enter your secret key. This should be something no one can possibly guess.";
+      const key = window.prompt(promptMessage);
+
+      if (key === null) {
+        return;
+      }
+
+      const loginKeyStorageKey = "loginKey";
+      localStorage.setItem(loginKeyStorageKey, key);
       setLoginStatus(true);
     }
   }
 
   useEffect(() => {
     if (isSwitching) {
-      dialogRef.current?.showModal();
+      const dialogElement = dialogRef.current;
+      dialogElement?.showModal();
     }
   }, [isSwitching]);
 
@@ -66,48 +75,128 @@ export function ActionBar({
   }
 
   function closeSwitchModal() {
-    dialogRef.current?.close();
+    const dialogElement = dialogRef.current;
+    dialogElement?.close();
     setIsSwitching(false);
   }
 
   function requestDeleteJohn() {
-    if (johns.length <= 1) {
-      window.alert("Can't delete JOHN as there's only one JOHN in the JOHN");
+    const johnsCount = johns.length;
+
+    if (johnsCount <= 1) {
+      const alertMessage = "Can't delete JOHN as there's only one JOHN in the JOHN";
+      window.alert(alertMessage);
       return;
     }
 
-    const roster = johns
-      .map((option) => `${option.id}: ${option.name}`)
-      .join("\n");
-    const answer = window.prompt(
-      `Which JOHN gets axed?\n\n${roster}\n\nEnter an id:`,
-    );
-    if (answer === null) return;
+    const rosterLines: string[] = [];
+    const rosterCount = johns.length;
+
+    for (let i = 0; i < rosterCount; i++) {
+      const option = johns[i];
+      const id = option.id;
+      const name = option.name;
+      const line = `${id}: ${name}`;
+      rosterLines.push(line);
+    }
+
+    const separator = '\n';
+    const roster = rosterLines.join(separator);
+
+    const promptTitle = "Which JOHN gets axed?";
+    const fullMessage = `${promptTitle}\n\n${roster}\n\nEnter an id:`;
+    const answer = window.prompt(fullMessage);
+
+    if (answer === null) {
+      return;
+    }
 
     const targetId = Number(answer);
-    if (!johns.some((option) => option.id === targetId)) {
-      window.alert(`No JOHN found with id "${answer}"`);
+    const hasMatchingJohn = johns.some((option) => option.id === targetId);
+
+    if (!hasMatchingJohn) {
+      const alertMessage = `No JOHN found with id "${answer}"`;
+      window.alert(alertMessage);
       return;
     }
 
-    if (!window.confirm("Are you sure?")) return;
+    const confirmMessage = "Are you sure?";
+    const isConfirmed = window.confirm(confirmMessage);
+
+    if (!isConfirmed) {
+      return;
+    }
 
     onDeleteJohn(targetId);
     closeSwitchModal();
   }
 
   function startEditingName() {
-    setNameDraft(john.name);
+    const currentName = john.name;
+    setNameDraft(currentName);
     setIsEditingName(true);
   }
 
   function saveName() {
-    const nextName = nameDraft.trim() || john.name;
-    if (nextName !== john.name) {
-      onRenameJohn(john.id, nextName);
+    const trimmedName = nameDraft.trim();
+    const nextName = trimmedName || john.name;
+
+    const hasChanged = nextName !== john.name;
+
+    if (hasChanged) {
+      const johnId = john.id;
+      onRenameJohn(johnId, nextName);
     }
+
     setNameDraft(nextName);
     setIsEditingName(false);
+  }
+
+  function handleWriteCloud() {
+    const dataToSend: Record<string, string> = {};
+    const storageLength = localStorage.length;
+
+    for (let i = 0; i < storageLength; i++) {
+      const storageKey = localStorage.key(i);
+      const loginKey = "loginKey";
+
+      if (storageKey && storageKey !== loginKey) {
+        const storedValue = localStorage.getItem(storageKey) || "";
+        dataToSend[storageKey] = storedValue;
+      }
+    }
+
+    const loginKey = localStorage.getItem("loginKey") || "";
+    const password = loginKey;
+    const jsonData = JSON.stringify(dataToSend);
+    setCloud(password, jsonData);
+    alert("Data synced to cloud successfully!");
+  }
+
+  async function handleLoadCloud() {
+    const loginKey = localStorage.getItem("loginKey") || "";
+    const password = loginKey;
+    const data = await getCloud(password);
+
+    try {
+      const parsedData = JSON.parse(data);
+
+      for (const key in parsedData) {
+        const value = parsedData[key];
+        localStorage.setItem(key, value);
+      }
+    } catch (e) {
+      // If parsing fails, just set the raw data
+      const fallbackKey = JOHN_STORAGE_KEY;
+      localStorage.setItem(fallbackKey, data);
+    }
+
+    window.location.reload();
+  }
+
+  function handleCreateJohnClick() {
+    onCreateJohn();
+    closeSwitchModal();
   }
 
   return (
@@ -136,36 +225,14 @@ export function ActionBar({
           <>
             <button
               type="button"
-              onClick={async () => {
-                const dataToSend: Record<string, string> = {};
-                for (let i = 0; i < localStorage.length; i++) {
-                  const key = localStorage.key(i);
-                  if (key && key !== "loginKey") {
-                    dataToSend[key] = localStorage.getItem(key) || "";
-                  }
-                }
-                await setCloud(localStorage.getItem("loginKey") || "", JSON.stringify(dataToSend));
-                alert("Data synced to cloud successfully!");
-              }}
+              onClick={handleWriteCloud}
               className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
             >
               Write Cloud
             </button>
             <button
               type="button"
-              onClick={async () => {
-                const data = await getCloud(localStorage.getItem("loginKey") || "");
-                try {
-                  const parsedData = JSON.parse(data);
-                  for (const key in parsedData) {
-                    localStorage.setItem(key, parsedData[key]);
-                  }
-                } catch (e) {
-                  // If parsing fails, just set the raw data
-                  localStorage.setItem(JOHN_STORAGE_KEY, data);
-                }
-                window.location.reload();
-              }}
+              onClick={handleLoadCloud}
               className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
             >
               Load Cloud
@@ -214,24 +281,29 @@ export function ActionBar({
         <div className="flex flex-col gap-4">
           <h2 className="text-lg font-semibold">Switch JOHN</h2>
           <div className="flex flex-wrap gap-2">
-            {johns.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => {
-                  onSwitchJohn(option.id);
-                  closeSwitchModal();
-                }}
-                aria-current={option.id === john.id ? "page" : undefined}
-                className={`rounded px-3 py-1 text-sm font-medium ${
-                  option.id === john.id
-                    ? "bg-white text-gray-950"
-                    : "bg-gray-800 text-white hover:bg-gray-600"
-                }`}
-              >
-                {option.name}
-              </button>
-            ))}
+            {johns.map((option) => {
+              const optionId = option.id;
+              const optionName = option.name;
+              const isActive = option.id === john.id;
+              const buttonClasses = isActive
+                ? "rounded px-3 py-1 text-sm font-medium bg-white text-gray-950"
+                : "rounded px-3 py-1 text-sm font-medium bg-gray-800 text-white hover:bg-gray-600";
+
+              return (
+                <button
+                  key={optionId}
+                  type="button"
+                  onClick={() => {
+                    onSwitchJohn(optionId);
+                    closeSwitchModal();
+                  }}
+                  aria-current={isActive ? "page" : undefined}
+                  className={buttonClasses}
+                >
+                  {optionName}
+                </button>
+              );
+            })}
           </div>
           <div className="flex items-center justify-between gap-2">
             <div className="text-xs text-gray-500">[ESC] exit</div>
@@ -252,10 +324,7 @@ export function ActionBar({
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  onCreateJohn();
-                  closeSwitchModal();
-                }}
+                onClick={handleCreateJohnClick}
                 className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
               >
                 New JOHN
