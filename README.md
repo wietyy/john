@@ -14,7 +14,8 @@ The best damn finance tracking app you will EVER find
 ## 🛠️ Tech Stack
 - Frontend: React
 - Backend: Express
-- Database: Docker
+- Database: SQLite
+- Deployment engine: Docker
 - That's pretty much it
 
 ## Quick note
