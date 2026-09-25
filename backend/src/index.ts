@@ -1,13 +1,18 @@
 import express from 'express';
 import { getData, setData } from './db';
+import rateLimit from 'express-rate-limit';
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes in milliseconds
+    limit: 100,
+    message: "Too many requests",
+});
 
 const app = express();
 
-const jsonMiddleware = express.json();
-app.use(jsonMiddleware);
-
-const staticMiddleware = express.static('frontend/dist');
-app.use(staticMiddleware);
+app.use(express.json());
+app.use(express.static('frontend/dist'));
+app.use(limiter);
 
 app.post('/api/getCloudData', (req, res) => {
     const requestBody = req.body;
