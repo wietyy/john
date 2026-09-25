@@ -1,6 +1,15 @@
 # Agent Instructions
 Act as a pseudo-psuedocode compiler. I will write comments in files and then let you loose - find them, implement changes, and remove comments. Simple as that.
 
+# My personal Coding Style
+- Use lots and lots of variables (garbage collection go brr)
+- Try to keep variable definitions simple - instead of 
+```js
+let bs = something.anotherthing(yetanother.thing(var)).toSomething as Array
+```
+- Instead try to keep one remarkably simple statement per line.
+- HTML does not have to be simple because that's impossible
+
 # What NOT to do
 - Create files other than ones i have created specifically for you
 - ^^^ emphasis on that there

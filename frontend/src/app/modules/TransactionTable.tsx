@@ -20,11 +20,16 @@ export type Stats = {
   keyNumber: number;
 };
 
-function sumTransactions(transactions: Transaction[]) {
-  return transactions.reduce(
-    (total, transaction) => total + transaction.amount,
-    0,
+function sumTransactions(transactions: Transaction[]): number {
+  const initialTotal = 0;
+  const total = transactions.reduce(
+    (sum, transaction) => {
+      const transactionAmount = transaction.amount;
+      return sum + transactionAmount;
+    },
+    initialTotal,
   );
+  return total;
 }
 
 type TransactionDraft = Omit<Transaction, "id">;
@@ -65,35 +70,55 @@ export const ICON_BUTTON =
   "inline-flex size-4 items-center justify-center text-gray-400 transition hover:text-white disabled:cursor-not-allowed disabled:text-gray-700";
 
 function readTransactions(johnId: number): Transaction[] {
-  const stored =
-    localStorage.getItem(getScopedStorageKey(TRANSACTIONS_STORAGE_KEY, johnId)) ??
-    (johnId === 1 ? localStorage.getItem(TRANSACTIONS_STORAGE_KEY) : null);
+  const scopedKey = getScopedStorageKey(TRANSACTIONS_STORAGE_KEY, johnId);
+  const stored = localStorage.getItem(scopedKey);
 
-  if (!stored) return [];
+  const isFirstJohn = johnId === 1;
+  const firstJohnKey = TRANSACTIONS_STORAGE_KEY;
+
+  const finalStored = stored ?? (isFirstJohn ? localStorage.getItem(firstJohnKey) : null);
+
+  if (!finalStored) {
+    return [];
+  }
 
   try {
-    const parsed: unknown = JSON.parse(stored);
-    return Array.isArray(parsed) ? (parsed as Transaction[]) : [];
+    const parsed: unknown = JSON.parse(finalStored);
+    const isArray = Array.isArray(parsed);
+    return isArray ? (parsed as Transaction[]) : [];
   } catch {
     return [];
   }
 }
 
 function readKeyNumber(johnId: number): number {
-  const stored =
-    localStorage.getItem(getScopedStorageKey(KEY_NUMBER_STORAGE_KEY, johnId)) ??
-    (johnId === 1 ? localStorage.getItem(KEY_NUMBER_STORAGE_KEY) : null);
-  const parsed = Number(stored);
-  return stored !== null && Number.isFinite(parsed) ? parsed : 0;
+  const scopedKey = getScopedStorageKey(KEY_NUMBER_STORAGE_KEY, johnId);
+  const stored = localStorage.getItem(scopedKey);
+
+  const isFirstJohn = johnId === 1;
+  const firstJohnKey = KEY_NUMBER_STORAGE_KEY;
+
+  const finalStored = stored ?? (isFirstJohn ? localStorage.getItem(firstJohnKey) : null);
+  const parsed = Number(finalStored);
+
+  const isNotNull = finalStored !== null;
+  const isFiniteNumber = Number.isFinite(parsed);
+  const isValid = isNotNull && isFiniteNumber;
+
+  return isValid ? parsed : 0;
 }
 
 function writeKeyNumber(value: number, johnId: number): void {
-  const key = getScopedStorageKey(KEY_NUMBER_STORAGE_KEY, johnId);
-  localStorage.setItem(key, String(value));
+  const scopedKey = getScopedStorageKey(KEY_NUMBER_STORAGE_KEY, johnId);
+  const stringValue = String(value);
+  localStorage.setItem(scopedKey, stringValue);
 }
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
+function today(): string {
+  const date = new Date();
+  const isoString = date.toISOString();
+  const datePart = isoString.slice(0, 10);
+  return datePart;
 }
 
 export function NoteIcon() {
@@ -160,27 +185,54 @@ function TransactionModal({
   onClose,
 }: TransactionModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [date, setDate] = useState(() => transaction?.date ?? today());
-  const [title, setTitle] = useState(() => transaction?.title ?? "");
-  const [amount, setAmount] = useState(() =>
-    transaction ? String(transaction.amount) : "",
-  );
-  const [note, setNote] = useState(() => transaction?.note ?? "");
+  const [date, setDate] = useState(() => {
+    const transactionDate = transaction?.date;
+    const todayDate = today();
+    return transactionDate ?? todayDate;
+  });
+  const [title, setTitle] = useState(() => {
+    const transactionTitle = transaction?.title;
+    return transactionTitle ?? "";
+  });
+  const [amount, setAmount] = useState(() => {
+    const hasTransaction = transaction !== undefined;
+    if (hasTransaction) {
+      const transactionAmount = transaction.amount;
+      return String(transactionAmount);
+    }
+    return "";
+  });
+  const [note, setNote] = useState(() => {
+    const transactionNote = transaction?.note;
+    return transactionNote ?? "";
+  });
 
   useEffect(() => {
-    dialogRef.current?.showModal();
+    const dialogElement = dialogRef.current;
+    dialogElement?.showModal();
   }, []);
 
   function submitTransaction(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onSubmit({
-      date,
-      title,
+
+    const trimmedNote = note.trim();
+    const noteOrNull = trimmedNote || undefined;
+
+    const draft: TransactionDraft = {
+      date: date,
+      title: title,
       amount: Number(amount),
-      note: note.trim() || undefined,
-    });
-    dialogRef.current?.close();
+      note: noteOrNull,
+    };
+
+    onSubmit(draft);
+    const dialogElement = dialogRef.current;
+    dialogElement?.close();
   }
+
+  const isEditMode = mode === "edit";
+  const dialogTitle = isEditMode ? "Edit Transaction" : "New Transaction";
+  const submitButtonText = isEditMode ? "Save" : "Create";
 
   return (
     <dialog
@@ -190,7 +242,7 @@ function TransactionModal({
     >
       <form className="flex flex-col gap-4" onSubmit={submitTransaction}>
         <h2 className="text-lg font-semibold">
-          {mode === "create" ? "New Transaction" : "Edit Transaction"}
+          {dialogTitle}
         </h2>
 
         <label className="flex flex-col gap-1">
@@ -199,7 +251,7 @@ function TransactionModal({
             type="date"
             value={date}
             required
-            disabled={mode === "edit"}
+            disabled={isEditMode}
             onChange={(event) => setDate(event.target.value)}
             className={`${FIELD_CLASS} disabled:text-gray-500`}
           />
@@ -242,7 +294,10 @@ function TransactionModal({
         <div className="flex justify-end gap-2 pt-2">
           <button
             type="button"
-            onClick={() => dialogRef.current?.close()}
+            onClick={() => {
+              const dialogElement = dialogRef.current;
+              dialogElement?.close();
+            }}
             className="rounded px-3 py-1 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white"
           >
             Cancel
@@ -251,7 +306,7 @@ function TransactionModal({
             type="submit"
             className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
           >
-            {mode === "create" ? "Create" : "Save"}
+            {submitButtonText}
           </button>
         </div>
       </form>
@@ -265,87 +320,106 @@ export function TransactionTable({
   onCloseCreate,
   onStatsChange,
 }: TransactionTableProps) {
-  const [transactions, setTransactions] =
-    useState<Transaction[]>(() => readTransactions(johnId));
-  const [keyNumber, setKeyNumber] = useState(() => readKeyNumber(johnId));
-  const [editingTransaction, setEditingTransaction] =
-    useState<Transaction | null>(null);
+  const initialTransactions = readTransactions(johnId);
+  const initialKeyNumber = readKeyNumber(johnId);
+
+  const [transactions, setTransactions] = useState<Transaction[]>(() => initialTransactions);
+  const [keyNumber, setKeyNumber] = useState(() => initialKeyNumber);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [isEditingKeyNumber, setIsEditingKeyNumber] = useState(false);
   const [keyNumberDraft, setKeyNumberDraft] = useState(() => String(keyNumber));
   const [visibleNotes, setVisibleNotes] = useState<number[]>([]);
 
   useEffect(() => {
-    onStatsChange?.({
-      transactionTotal: sumTransactions(transactions),
-      keyNumber,
-    });
+    const transactionTotal = sumTransactions(transactions);
+    const stats: Stats = {
+      transactionTotal: transactionTotal,
+      keyNumber: keyNumber,
+    };
+    onStatsChange?.(stats);
   }, [transactions, keyNumber, onStatsChange]);
 
-  function persistTransaction(next: Transaction[]) {
-    const key = getScopedStorageKey(TRANSACTIONS_STORAGE_KEY, johnId);
-    localStorage.setItem(key, JSON.stringify(next));
+  function persistTransaction(next: Transaction[]): Transaction[] {
+    const scopedKey = getScopedStorageKey(TRANSACTIONS_STORAGE_KEY, johnId);
+    const jsonData = JSON.stringify(next);
+    localStorage.setItem(scopedKey, jsonData);
     return next;
   }
 
   function createTransaction(draft: TransactionDraft) {
     setTransactions((current) => {
-      const nextId =
-        current.reduce(
-          (highest, transaction) => Math.max(highest, transaction.id),
-          -1,
-        ) + 1;
+      const calculateMaxId = (acc: number, trans: Transaction) => {
+        const transId = trans.id;
+        return Math.max(acc, transId);
+      };
+      const nextId = current.reduce(calculateMaxId, -1) + 1;
 
-      return persistTransaction([...current, { id: nextId, ...draft }]);
+      const newTransaction = { id: nextId, ...draft };
+      const updatedList = [...current, newTransaction];
+      return persistTransaction(updatedList);
     });
   }
 
   function updateTransaction(transactionId: number, draft: TransactionDraft) {
-    setTransactions((current) =>
-      persistTransaction(
-        current.map((transaction) =>
-          transaction.id === transactionId
-            ? { ...draft, id: transactionId }
-            : transaction,
-        ),
-      ),
-    );
+    setTransactions((current) => {
+      const updateTransactionItem = (transaction: Transaction) => {
+        const isMatchingId = transaction.id === transactionId;
+        if (isMatchingId) {
+          return { ...draft, id: transactionId };
+        }
+        return transaction;
+      };
+      const updatedList = current.map(updateTransactionItem);
+      return persistTransaction(updatedList);
+    });
   }
 
   function deleteTransaction(transactionId: number) {
-    setTransactions((current) =>
-      persistTransaction(
-        current.filter((transaction) => transaction.id !== transactionId),
-      ),
-    );
+    setTransactions((current) => {
+      const isNotDeleted = (transaction: Transaction) => {
+        return transaction.id !== transactionId;
+      };
+      const updatedList = current.filter(isNotDeleted);
+      return persistTransaction(updatedList);
+    });
   }
 
   function editKeyNumber() {
-    const next = Number(keyNumberDraft);
-    const safe = Number.isFinite(next) ? next : 0;
-    writeKeyNumber(safe, johnId);
-    setKeyNumber(safe);
+    const nextNumber = Number(keyNumberDraft);
+    const isFinite = Number.isFinite(nextNumber);
+    const safeValue = isFinite ? nextNumber : 0;
+
+    writeKeyNumber(safeValue, johnId);
+    setKeyNumber(safeValue);
     setIsEditingKeyNumber(false);
   }
 
   function startEditingKeyNumber() {
-    setKeyNumberDraft(String(keyNumber));
+    const stringKey = String(keyNumber);
+    setKeyNumberDraft(stringKey);
     setIsEditingKeyNumber(true);
   }
 
   function toggleNote(transactionId: number) {
-    setVisibleNotes((current) =>
-      current.includes(transactionId)
-        ? current.filter((id) => id !== transactionId)
-        : [...current, transactionId],
-    );
+    setVisibleNotes((current) => {
+      const containsId = current.includes(transactionId);
+      if (containsId) {
+        return current.filter((id) => id !== transactionId);
+      }
+      return [...current, transactionId];
+    });
   }
 
   function submitTransaction(draft: TransactionDraft) {
-    if (editingTransaction) {
-      updateTransaction(editingTransaction.id, draft);
+    const hasEditingTransaction = editingTransaction !== null;
+
+    if (hasEditingTransaction) {
+      const editingId = editingTransaction.id;
+      updateTransaction(editingId, draft);
     } else {
       createTransaction(draft);
     }
+
     setEditingTransaction(null);
     onCloseCreate();
   }
@@ -355,19 +429,46 @@ export function TransactionTable({
     onCloseCreate();
   }
 
-  const modal = editingTransaction
-    ? { mode: "edit" as const, transaction: editingTransaction }
-    : isCreating
-      ? { mode: "create" as const, transaction: undefined }
-      : null;
+  const hasEditingTransaction = editingTransaction !== null;
+  const hasIsCreating = isCreating;
+
+  let modal: { mode: "edit" | "create"; transaction: Transaction } | null = null;
+
+  if (hasEditingTransaction) {
+    const editTransaction = editingTransaction;
+    modal = { mode: "edit", transaction: editTransaction };
+  } else if (hasIsCreating) {
+    modal = { mode: "create", transaction: undefined! };
+  } else {
+    modal = null;
+  }
 
   const rows: ReactNode[] = [];
+
   transactions.forEach((transaction) => {
-    const isNoteVisible = visibleNotes.includes(transaction.id);
+    const transactionId = transaction.id;
+    const isNoteVisible = visibleNotes.includes(transactionId);
+
+    const toggleNoteHandler = () => toggleNote(transactionId);
+    const editTransactionHandler = () => setEditingTransaction(transaction);
+    const deleteTransactionHandler = () => deleteTransaction(transactionId);
+
+    const deleteTd = (
+      <td className="px-2 py-2 text-center">
+        <button
+          type="button"
+          aria-label="Delete transaction"
+          onClick={deleteTransactionHandler}
+          className="inline-flex size-4 items-center justify-center text-red-500 transition hover:text-red-300"
+        >
+          <DeleteIcon />
+        </button>
+      </td>
+    );
 
     rows.push(
       <tr
-        key={transaction.id}
+        key={transactionId}
         className="border-b border-gray-800 transition hover:bg-gray-900/60"
       >
         <td className="py-2 pr-4 text-right text-sm text-gray-400">
@@ -382,7 +483,7 @@ export function TransactionTable({
             type="button"
             aria-label="Show note"
             disabled={!transaction.note}
-            onClick={() => toggleNote(transaction.id)}
+            onClick={toggleNoteHandler}
             className={ICON_BUTTON}
           >
             <NoteIcon />
@@ -392,57 +493,68 @@ export function TransactionTable({
           <button
             type="button"
             aria-label="Edit transaction"
-            onClick={() => setEditingTransaction(transaction)}
+            onClick={editTransactionHandler}
             className={ICON_BUTTON}
           >
             <EditIcon />
           </button>
         </td>
-        <td className="px-2 py-2 text-center">
-          <button
-            type="button"
-            aria-label="Delete transaction"
-            onClick={() => deleteTransaction(transaction.id)}
-            className="inline-flex size-4 items-center justify-center text-red-500 transition hover:text-red-300"
-          >
-            <DeleteIcon />
-          </button>
-        </td>
+        {deleteTd}
       </tr>,
     );
 
-    if (isNoteVisible && transaction.note) {
+    const hasNote = transaction.note !== undefined;
+
+    if (isNoteVisible && hasNote) {
+      const noteText = transaction.note!;
+      const noteKey = `${transactionId}-note`;
+
       rows.push(
-        <tr key={`${transaction.id}-note`} className="border-b border-gray-800">
+        <tr key={noteKey} className="border-b border-gray-800">
           <td
             colSpan={COLUMN_HEADINGS.length}
             className="bg-gray-900/40 px-2 py-2 text-sm text-gray-400"
           >
-            {transaction.note}
+            {noteText}
           </td>
         </tr>,
       );
     }
   });
 
+  const headingCount = COLUMN_HEADINGS.length;
+  const hasRows = rows.length > 0;
+
+  const headerClasses = {
+    date: "px-2 py-2 text-right",
+    amount: "px-2 py-2 text-right",
+    other: "px-2 py-2 text-center",
+  };
+
+  const getHeaderClass = (heading: string): string => {
+    if (heading === "Date" || heading === "Amount") {
+      return headerClasses.date + " " + headerClasses.other;
+    }
+    return headerClasses.other;
+  };
+
   return (
     <div className="p-4">
       <table className="w-full border-collapse text-left">
         <thead>
           <tr className="border-b border-gray-700 text-xs uppercase tracking-wide text-gray-500">
-            {COLUMN_HEADINGS.map((heading) => (
-              <th
-                key={heading}
-                scope="col"
-                className={
-                  heading === "Date" || heading === "Amount"
-                    ? "px-2 py-2 text-right"
-                    : "px-2 py-2 text-center"
-                }
-              >
-                {heading}
-              </th>
-            ))}
+            {COLUMN_HEADINGS.map((heading) => {
+              const headerClass = getHeaderClass(heading);
+              return (
+                <th
+                  key={heading}
+                  scope="col"
+                  className={headerClass}
+                >
+                  {heading}
+                </th>
+              );
+            })}
           </tr>
         </thead>
 
@@ -465,9 +577,7 @@ export function TransactionTable({
                   }}
                   className="w-24 rounded bg-gray-700 px-2 py-0.5 text-right text-sm text-white outline-none"
                 />
-              ) : (
-                keyNumber
-              )}
+              ) : keyNumber}
             </td>
             <td className="px-2 py-2" />
             <td className="px-2 py-2 text-center">
@@ -483,12 +593,12 @@ export function TransactionTable({
             <td className="px-2 py-2" />
           </tr>
 
-          {rows.length > 0 ? (
+          {hasRows ? (
             rows
           ) : (
             <tr className="border-b border-gray-800">
               <td
-                colSpan={COLUMN_HEADINGS.length}
+                colSpan={headingCount}
                 className="px-2 py-6 text-center text-sm text-gray-500"
               >
                 No transactions yet.
@@ -500,9 +610,7 @@ export function TransactionTable({
 
       {modal && (
         <TransactionModal
-          key={
-            modal.mode === "edit" ? `edit-${modal.transaction.id}` : "create"
-          }
+          key={modal.mode === "edit" ? `edit-${modal.transaction.id}` : "create"}
           mode={modal.mode}
           transaction={modal.transaction}
           onSubmit={submitTransaction}
