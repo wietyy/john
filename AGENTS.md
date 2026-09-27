@@ -15,6 +15,7 @@ let bs = something.anotherthing(yetanother.thing(var)).toSomething as Array
 - ^^^ emphasis on that there
 - Take full control of my project, unless if i explicitly tell you to
 - Refactor or redesign working code without explicit instruction in terms of stubs. I will never pass instructions through the chat unless i am pointing you to stubs.
+- Don't put in your own comments. All comments are instructions from me ONLY.
 
 
 # Project Information:
