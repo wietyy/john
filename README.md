@@ -3,6 +3,16 @@
 
 The best damn finance tracking app you will EVER find
 
+## Quick Start
+To run the app quickly, simply build and run the Docker container with the POSTGRES environment variable set to your PostgreSQL connection string.
+
+Or, for the normies:
+
+```shell
+docker build -t john .
+docker run -d -p port_you_want:3000 -e POSTGRES=your_connection_string_here john
+```
+
 ## ✨ Features
 
 - Not-so-steep learning curve!

@@ -20,3 +20,6 @@ let bs = something.anotherthing(yetanother.thing(var)).toSomething as Array
 
 # Project Information:
 - Database Schema in schema.sql (Use this for implementations of database operations in backend/src/db.ts)
+- All frontend data schema updates should be just fine as we are pushing the whole object (minus secret key) to the database. 
+- - However, when developing frontend code, try to make it as backward compatible as possible. I will try my hardest to make design choices that point us in this direction, but don't go with instructions if my design choices are not backward compatible.
+- - Backend code MUST ALWAYS BE BACKWARD COMPATIBLE. Typically, only the getData and setData functions should need maintained, so just don't be stupid (like me).
