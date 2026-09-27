@@ -14,19 +14,19 @@ app.use(express.json());
 app.use(express.static('frontend/dist'));
 app.use(limiter);
 
-app.post('/api/getCloudData', (req, res) => {
+app.post('/api/getCloudData', async (req, res) => {
     const requestBody = req.body;
     const password = requestBody.password;
-    const data = getData(password);
+    const data = await getData(password);
     const responseBody = { data };
     res.json(responseBody);
 });
 
-app.post('/api/setCloudData', (req, res) => {
+app.post('/api/setCloudData', async (req, res) => {
     const requestBody = req.body;
     const requestPassword = requestBody.password;
     const requestData = requestBody.data;
-    const result = setData(requestPassword, requestData);
+    const result = await setData(requestPassword, requestData);
     const responseBody = { result };
     res.json(responseBody);
 });
@@ -36,7 +36,7 @@ const envPort = process.env.PORT;
 const portString = envPort ?? defaultPort;
 const portNumber = Number(portString);
 
-const server = app.listen(portNumber, () => {
+app.listen(portNumber, () => {
     const message = `Server running on port ${portString}`;
     console.log(message);
 });
