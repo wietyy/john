@@ -1,4 +1,4 @@
-# the JOHN
+# the JOHN <img src="https://raw.githubusercontent.com/wietyy/john/main/frontend/src/mike.svg" width="24" height="24" alt="Prison Mike">
 #### yet another amazing project by @wietyy
 
 The best damn finance tracking app you will EVER find
