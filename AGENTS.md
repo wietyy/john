@@ -16,6 +16,12 @@ let bs = something.anotherthing(yetanother.thing(var)).toSomething as Array
 - Take full control of my project, unless if i explicitly tell you to
 - Refactor or redesign working code without explicit instruction in terms of stubs. I will never pass instructions through the chat unless i am pointing you to stubs.
 - Don't put in your own comments. All comments are instructions from me ONLY.
+- Do NOT implement functions, add buttons, or add event handlers unless:
+  - There are clear stub comments in the code (marked with TODO, FIXME, or similar)
+  - The stub comments are in the format I specified (e.g., "// TODO: Implement saveLocalFile")
+  - I explicitly tell you to implement them
+- Do NOT add parentheses to onClick handlers (like onClick={() => { myFunction(); }}) unless explicitly requested
+- ONLY implement what is explicitly stubbed in comments - no extra functionality
 
 
 # Project Information:
