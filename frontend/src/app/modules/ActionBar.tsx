@@ -4,7 +4,7 @@ import { getCloud, setCloud } from "../cloud";
 export const JOHN_STORAGE_KEY = "johns";
 export const CURRENT_JOHN_ID_STORAGE_KEY = "currentJohnId";
 export const TITLE_STORAGE_KEY = "documentTitle";
-export const DEFAULT_JOHN_NAME = "JOHN 1";
+export const DEFAULT_JOHN_NAME = "Your";
 
 export type John = {
   id: number;
@@ -199,6 +199,58 @@ export function ActionBar({
     closeSwitchModal();
   }
 
+  function saveLocalFile() {
+    const dataToSend: Record<string, string> = {};
+    const storageLength = localStorage.length;
+
+    for (let i = 0; i < storageLength; i++) {
+      const storageKey = localStorage.key(i);
+      const loginKey = "loginKey";
+
+      if (storageKey && storageKey !== loginKey) {
+        const storedValue = localStorage.getItem(storageKey) || "";
+        dataToSend[storageKey] = storedValue;
+      }
+    }
+
+    const jsonData = JSON.stringify(dataToSend, null, 2);
+    const blob = new Blob([jsonData], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "john-data.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function loadLocalFile() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsedData = JSON.parse(reader.result as string);
+          for (const key in parsedData) {
+            const value = parsedData[key];
+            localStorage.setItem(key, value);
+          }
+          window.location.reload();
+        } catch (e) {
+          alert("Failed to load file: invalid JSON format");
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
   return (
     <div className="flex items-center justify-between gap-4 bg-gray-900 px-4 py-2 text-white">
       <div className="flex items-center gap-2">
@@ -242,14 +294,28 @@ export function ActionBar({
         ) : (
           <button
             type="button"
-            onClick={login}
+            onClick={() => { login(); }}
             className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
           >
             Login
           </button>
         )}
-      </div>
+        <button
+          type="button"
+          onClick={() => { saveLocalFile(); }}
+          className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+        >
+          Save File
+        </button>
+        <button
+          type="button"
+          onClick={() => { loadLocalFile(); }}
+          className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+        >
+          Load File
+        </button>
 
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
