@@ -1,9 +1,10 @@
 import { Link } from 'react-router';
+import mike from '../../mike.svg';
 
 export function TopBar() {
     const containerClassName = "flex items-center justify-between bg-gray-900 px-4 py-2 text-white";
     const leftClassName = "flex items-center gap-2";
-    const iconSrc = "https://raw.githubusercontent.com/wietyy/john/main/frontend/src/mike.svg";
+    const iconSrc = mike;
     const iconAlt = "JOHN icon";
     const iconClassName = "w-6 h-6";
     const brandClassName = "text-lg font-semibold";
