@@ -9,7 +9,7 @@ export function Gyro() {
     const boxCenter = "flex items-center justify-center";
     const boxClassName = `${boxWidth} ${boxHeight} ${boxBackground} ${boxCenter} ${boxColor}`;
 
-    const centeredDivClassName = "flex flex-col items-center";
+    const centeredDivClassName = "flex flex-col items-center bg-gray-800 px-10 pb-10 rounded-2xl";
 
     const titleText = "JOHN";
     const titleClassName = "text-[100px] font-bold uppercase text-white";
