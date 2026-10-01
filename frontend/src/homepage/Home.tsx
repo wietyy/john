@@ -1,10 +1,9 @@
-import { Link } from 'react-router';
+import { TopBar } from "./modules/TopBar";
 
 export function Home() {
     return (
         <>
-            <div>homepage placeholder</div>
-            <Link to="/app">Go to App</Link>
+            <TopBar />
         </>
     )
 }
