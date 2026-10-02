@@ -254,7 +254,7 @@ export function ActionBar({
   return (
     <div className="flex items-center justify-between gap-4 bg-gray-900 px-4 py-2 text-white">
       <div className="flex items-center gap-2">
-      <img src="https://raw.githubusercontent.com/wietyy/john/main/frontend/src/mike.svg" alt="JOHN icon" className="w-6 h-6" />
+      <img src="https://raw.githubusercontent.com/wietyy/john/main/frontend/src/mike.svg" alt="prison mike :D" className="w-6 h-6" />
         {isEditingName ? (
           <input
             autoFocus
