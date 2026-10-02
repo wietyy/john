@@ -23,7 +23,7 @@ export function Description() {
                 {description}
             </ReactMarkdown>
             <div className="mx-auto w-1/4 pb-5">
-                <Link to="/app" className="mx-auto inline-block mt-6 rounded bg-gray-700 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600">
+                <Link to="/app" className="grid place-items-center inline-block rounded bg-gray-700 px-6 py-3 text-sm font-medium text-white hover:bg-gray-600">
                     Let's Go!
                 </Link>
             </div>
