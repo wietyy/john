@@ -180,7 +180,16 @@ export function ActionBar({
     const loginKey = localStorage.getItem("loginKey") || "";
     const password = loginKey;
     const encryptedData = await getCloud(password);
-    const decryptedData = await decrypt(encryptedData, password);
+
+    const startsWithBrace = encryptedData.startsWith('{');
+
+    let decryptedData: string;
+
+    if (startsWithBrace) {
+      decryptedData = encryptedData;
+    } else {
+      decryptedData = await decrypt(encryptedData, password);
+    }
 
     try {
       const parsedData = JSON.parse(decryptedData);
