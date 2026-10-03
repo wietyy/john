@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getCloud, setCloud } from "../cloud";
+import { encrypt, decrypt } from "../encrypt";
 
 export const JOHN_STORAGE_KEY = "johns";
 export const CURRENT_JOHN_ID_STORAGE_KEY = "currentJohnId";
@@ -152,7 +153,7 @@ export function ActionBar({
     setIsEditingName(false);
   }
 
-  function handleWriteCloud() {
+  async function handleWriteCloud() {
     const dataToSend: Record<string, string> = {};
     const storageLength = localStorage.length;
 
@@ -169,17 +170,29 @@ export function ActionBar({
     const loginKey = localStorage.getItem("loginKey") || "";
     const password = loginKey;
     const jsonData = JSON.stringify(dataToSend);
-    setCloud(password, jsonData);
+
+    const encryptedData = await encrypt(jsonData, password);
+    await setCloud(password, encryptedData);
     alert("Data synced to cloud successfully!");
   }
 
   async function handleLoadCloud() {
     const loginKey = localStorage.getItem("loginKey") || "";
     const password = loginKey;
-    const data = await getCloud(password);
+    const encryptedData = await getCloud(password);
+
+    const startsWithBrace = encryptedData.startsWith('{');
+
+    let decryptedData: string;
+
+    if (startsWithBrace) {
+      decryptedData = encryptedData;
+    } else {
+      decryptedData = await decrypt(encryptedData, password);
+    }
 
     try {
-      const parsedData = JSON.parse(data);
+      const parsedData = JSON.parse(decryptedData);
 
       for (const key in parsedData) {
         const value = parsedData[key];
@@ -188,7 +201,7 @@ export function ActionBar({
     } catch (e) {
       // If parsing fails, just set the raw data
       const fallbackKey = JOHN_STORAGE_KEY;
-      localStorage.setItem(fallbackKey, data);
+      localStorage.setItem(fallbackKey, decryptedData);
     }
 
     window.location.reload();
