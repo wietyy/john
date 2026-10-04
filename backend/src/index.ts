@@ -1,6 +1,8 @@
 import express from 'express';
 import { getData, setData } from './db';
 import rateLimit from 'express-rate-limit';
+import compression from 'compression';
+
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes in milliseconds
@@ -12,6 +14,7 @@ const app = express();
 
 app.use(express.json());
 app.use(express.static('frontend/dist'));
+app.use(compression());
 app.use(limiter);
 
 app.post('/api/getCloudData', async (req, res) => {
