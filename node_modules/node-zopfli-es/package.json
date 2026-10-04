@@ -1,0 +1,71 @@
+{
+  "name": "node-zopfli-es",
+  "description": "Bindings for Zopfli compressing lib. Compress gzip files 5% better than gzip.",
+  "version": "1.0.7",
+  "author": "Jascha Ehrenreich <j@jaeh.at>",
+  "contributors": [
+    "duralog <funisher@gmail.com>",
+    "MayhemYDG <stepien.nicolas@gmail.com>",
+    "XhmikosR <xhmikosr@gmail.com>",
+    "Pierre Inglebert <pierre.inglebert@gmail.com>",
+    "Hitesh Kanwathirtha",
+    "Silas Rech",
+    "Jascha Ehrenreich <j@jaeh.at>",
+    "Mark Suska"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "zopfli",
+    "zlib",
+    "compress",
+    "gzip",
+    "deflate",
+    "es6",
+    "node-addon-api"
+  ],
+  "homepage": "https://github.com/jaeh/node-zopfli-es",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jaeh/node-zopfli-es.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jaeh/node-zopfli-es/issues"
+  },
+  "engines": {
+    "node": ">=8.11.2"
+  },
+  "dependencies": {
+    "commander": "6.1.0",
+    "node-addon-api": "3.0.2",
+    "node-gyp": "7.1.0"
+  },
+  "devDependencies": {
+    "@magic/test": "0.1.0-cjs",
+    "coveralls": "3.1.0",
+    "eslint": "7.10.0"
+  },
+  "bin": {
+    "zopfli": "bin/zopfli.js",
+    "zopflipng": "bin/zopflipng.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "src",
+    "zopfli",
+    "binding.gyp"
+  ],
+  "scripts": {
+    "start": "npm test",
+    "coveralls": "npm run report | coveralls",
+    "report": "nyc report --reporter=text-lcov",
+    "lint": "eslint .",
+    "test-cov": "t",
+    "test": "t -p",
+    "format": "f -w",
+    "format:check": "f",
+    "update:zopfli": "cd zopfli && git pull origin master && cd .."
+  },
+  "main": "lib/zopfli.js",
+  "gypfile": true
+}
