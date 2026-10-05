@@ -17,6 +17,10 @@ app.use(express.static('frontend/dist'));
 app.use(compression());
 app.use(limiter);
 
+app.get('/app', async (req, res) => {
+    res.sendFile('index.html', { root: 'frontend/dist' });
+});
+
 app.post('/api/getCloudData', async (req, res) => {
     const requestBody = req.body;
     const password = requestBody.password;
