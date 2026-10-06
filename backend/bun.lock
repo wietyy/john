@@ -5,23 +5,23 @@
     "": {
       "name": "backend",
       "dependencies": {
-        "@types/bcrypt": "^6.0.0",
-        "@types/express": "^5.0.6",
         "bcrypt": "^6.0.0",
         "compression": "^1.8.2",
         "express": "^5.2.1",
         "express-rate-limit": "^8.7.0",
-        "pg": "^8.23.0",
+        "pg": "^8.23.0"
       },
       "devDependencies": {
         "@types/bun": "latest",
         "@types/compression": "^1.8.1",
-        "@types/pg": "^8.23.1",
+        "@types/pg": "^8.23.1"
       },
       "peerDependencies": {
-        "typescript": "^7",
-      },
-    },
+        "@types/bcrypt": "^6.0.0",
+        "@types/express": "^5.0.6",
+        "typescript": "^7"
+      }
+    }
   },
   "packages": {
     "@types/bcrypt": ["@types/bcrypt@6.0.0", "", { "dependencies": { "@types/node": "*" } }, "sha512-/oJGukuH3D2+D+3H4JWLaAsJ/ji86dhRidzZ/Od7H/i8g+aCmvkeCc6Ni/f9uxGLSQVCRZkX2/lqEFG2BvWtlQ=="],
@@ -306,6 +306,6 @@
 
     "finalhandler/debug/ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
 
-    "router/debug/ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
+    "router/debug/ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="]
   }
 }
