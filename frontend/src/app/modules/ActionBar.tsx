@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getCloud, setCloud } from "../cloud";
-import { encrypt, decrypt } from "../encrypt";
+import { encrypt, decrypt } from "@wietyy/easycrypt";
 
 export const JOHN_STORAGE_KEY = "johns";
 export const CURRENT_JOHN_ID_STORAGE_KEY = "currentJohnId";
