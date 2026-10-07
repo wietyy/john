@@ -44,6 +44,9 @@ const portString = envPort ?? defaultPort;
 const portNumber = Number(portString);
 
 app.listen(portNumber, () => {
-    const message = `Server running on port ${portString}`;
+    const message = `
+    JOHN is running on port ${portString}.
+    To access, navigate to http://localhost:${portString}.
+    `;
     console.log(message);
 });
