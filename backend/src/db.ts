@@ -1,10 +1,16 @@
 import { Pool } from 'pg';
-import { env } from 'process';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt'; // Keep your other imports
 
-const databaseUrl = env.POSTGRES as string;
+// 1. Use Bun's native env object
+const databaseUrl = Bun.env.POSTGRES; 
+
+// 2. Add a quick sanity check to catch missing variables early
+if (!databaseUrl) {
+  throw new Error("POSTGRES environment variable is not defined!");
+}
+
 const pool = new Pool({
-  connectionString: databaseUrl,
+  connectionString: databaseUrl
 });
 
 const createTableSql = `CREATE TABLE IF NOT EXISTS main (
