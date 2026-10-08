@@ -64,6 +64,17 @@ export function ActionBar({
     }
   }
 
+  function logout() {
+    const confirmMessage = "Are you sure you want to log out?";
+    const isConfirmed = window.confirm(confirmMessage);
+
+    if (isConfirmed) {
+      const loginKeyStorageKey = "loginKey";
+      localStorage.removeItem(loginKeyStorageKey);
+      setLoginStatus(false);
+    }
+  }
+
   useEffect(() => {
     if (isSwitching) {
       const dialogElement = dialogRef.current;
@@ -302,6 +313,13 @@ export function ActionBar({
               className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
             >
               Load Cloud
+            </button>
+            <button
+              type="button"
+              onClick={logout}
+              className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+            >
+              Logout
             </button>
           </>
         ) : (
