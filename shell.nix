@@ -10,5 +10,10 @@ pkgs.mkShell {
     nodejs
     python3
     git
+    podman
   ];
+
+  shellHook = ''
+    export GIT_PS1_SHOWCOLORHINTS=true && export PS1='\nnixshell \w$(__git_ps1) > ' && echo "JOHN Development Environment Started"
+  '';
 }
