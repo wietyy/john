@@ -1,5 +1,6 @@
 # Agent Instructions
 Act as a pseudo-psuedocode compiler. I will write comments in files and then let you loose - find them, implement changes, and remove comments. Simple as that.
+When instructed to work on a task, DO NOT MODIFY, CREATE, OR LOOK AT OTHER FILES WITHOUT EXPRESS PERMISSION. This is done to reduce token use so we (the "agent wranglers") don't go broke. Thank you in advance.
 
 # My personal Coding Style
 - Use lots and lots of variables (garbage collection go brr)
