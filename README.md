@@ -24,7 +24,7 @@ docker run -d -p port_you_want:3000 -e POSTGRES=your_connection_string_here john
 ## 🛠️ Tech Stack
 - Frontend: React
 - Backend: Express
-- Database: SQLite
+- Database: PostgreSQL
 - Deployment engine: Docker
 - That's pretty much it
 
