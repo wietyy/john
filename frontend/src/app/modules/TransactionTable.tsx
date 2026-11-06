@@ -198,7 +198,7 @@ function TransactionModal({
     const hasTransaction = transaction !== undefined;
     if (hasTransaction) {
       const transactionAmount = transaction.amount;
-      return String(transactionAmount);
+      return String(Number(transactionAmount.toFixed(2)));
     }
     return "";
   });
@@ -395,7 +395,7 @@ export function TransactionTable({
   }
 
   function startEditingKeyNumber() {
-    const stringKey = String(keyNumber);
+    const stringKey = String(Number(keyNumber.toFixed(2)));
     setKeyNumberDraft(stringKey);
     setIsEditingKeyNumber(true);
   }
@@ -476,7 +476,7 @@ export function TransactionTable({
         </td>
         <td className="px-2 py-2 text-sm">{transaction.title}</td>
         <td className="px-2 py-2 text-right text-sm tabular-nums">
-          {transaction.amount}
+          {Number(transaction.amount.toFixed(2))}
         </td>
         <td className="px-2 py-2 text-center">
           <button
@@ -577,7 +577,7 @@ export function TransactionTable({
                   }}
                   className="w-24 rounded bg-gray-700 px-2 py-0.5 text-right text-sm text-white outline-none"
                 />
-              ) : keyNumber}
+              ) : Number(keyNumber.toFixed(2))}
             </td>
             <td className="px-2 py-2" />
             <td className="px-2 py-2 text-center">

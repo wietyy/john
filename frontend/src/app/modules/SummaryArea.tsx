@@ -33,7 +33,8 @@ function SummaryRow({
     const baseClassName = "flex items-center justify-between border-b border-gray-800 py-2 text-sm";
     const className = `${baseClassName} ${fontWeight}`;
 
-    const formattedValue = `$${value}`;
+    const roundedValue = Number(value.toFixed(2));
+    const formattedValue = `$${roundedValue}`;
     const valueClassName = `tabular-nums ${valueColor}`;
 
     return (

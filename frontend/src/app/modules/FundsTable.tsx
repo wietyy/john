@@ -92,7 +92,7 @@ function FundModal({ mode, fund, onSubmit, onClose }: FundModalProps) {
         const hasFund = fund !== undefined;
         if (hasFund) {
             const fundAmount = fund.amount;
-            return String(fundAmount);
+            return String(Number(fundAmount.toFixed(2)));
         }
         return "";
     });
@@ -100,7 +100,7 @@ function FundModal({ mode, fund, onSubmit, onClose }: FundModalProps) {
         const hasFund = fund !== undefined;
         if (hasFund) {
             const fundGoal = fund.goal;
-            return String(fundGoal);
+            return String(Number(fundGoal.toFixed(2)));
         }
         return "";
     });
@@ -361,15 +361,15 @@ export function FundsTable({
             >
                 <td className="px-2 py-2 text-sm">{fund.title}</td>
                 <td className="px-2 py-2 text-right text-sm tabular-nums">
-                    {fund.amount}
+                    {Number(fund.amount.toFixed(2))}
                 </td>
                 <td className="px-2 py-2 text-right text-sm tabular-nums text-gray-400">
-                    {fund.goal}
+                    {Number(fund.goal.toFixed(2))}
                 </td>
                 <td
                     className={`px-2 py-2 text-right text-sm tabular-nums ${overUnderColor}`}
                 >
-                    {overUnder}
+                    {Number(overUnder.toFixed(2))}
                 </td>
                 <td className="px-2 py-2 text-center">
                     <button
