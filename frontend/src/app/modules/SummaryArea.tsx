@@ -18,19 +18,19 @@ function SummaryRow({
     const isNegative = value < 0;
     const isMuted = muted ?? false;
 
-    let valueColor = "text-white";
+    let valueColor = "text-app-text";
 
     if (isPositive) {
-        valueColor = "text-green-500";
+        valueColor = "text-app-positive";
     } else if (isNegative) {
-        valueColor = "text-red-500";
+        valueColor = "text-app-negative";
     } else if (isMuted) {
-        valueColor = "text-gray-600";
+        valueColor = "text-app-muted-dim";
     }
 
     const hasBold = bold ?? false;
     const fontWeight = hasBold ? "font-semibold" : "";
-    const baseClassName = "flex items-center justify-between border-b border-gray-800 py-2 text-sm";
+    const baseClassName = "flex items-center justify-between border-b border-app-border py-2 text-sm";
     const className = `${baseClassName} ${fontWeight}`;
 
     const roundedValue = Number(value.toFixed(2));
@@ -41,7 +41,7 @@ function SummaryRow({
         <div
             className={className}
         >
-            <span className="text-gray-400">{label}</span>
+            <span className="text-app-muted">{label}</span>
             <span className={valueClassName}>{formattedValue}</span>
         </div>
     );

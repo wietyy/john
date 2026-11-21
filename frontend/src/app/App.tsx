@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     ActionBar,
     CURRENT_JOHN_ID_STORAGE_KEY,
@@ -13,6 +13,23 @@ import { SummaryArea } from "./modules/SummaryArea";
 import { TransactionTable, type Stats } from "./modules/TransactionTable";
 
 const NOTES_STORAGE_KEY = "textNotes";
+const THEME_STORAGE_KEY = "theme";
+
+const THEMES = [
+    { id: "dark", label: "Dark", description: "Charcoal panels on a near-black base" },
+    { id: "midnight", label: "Midnight", description: "Blue-black with cool grey surfaces" },
+    { id: "oled", label: "OLED", description: "Pure black with grey shades" },
+    { id: "light", label: "Light", description: "Bright surfaces with dark text" },
+] as const;
+
+type Theme = (typeof THEMES)[number]["id"];
+
+function readTheme(): Theme {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    const storedTheme = THEMES.find((themeOption) => themeOption.id === stored);
+    const theme: Theme = storedTheme ? storedTheme.id : "dark";
+    return theme;
+}
 
 function isJohn(value: unknown): value is John {
     const isObject = typeof value === "object";
@@ -133,6 +150,23 @@ export function App() {
     const initializedNotes = readNotes(currentJohnId);
     const [notes, setNotes] = useState(() => initializedNotes);
 
+    const initializedTheme = readTheme();
+    const [theme, setTheme] = useState<Theme>(() => initializedTheme);
+    const [isThemePickerOpen, setIsThemePickerOpen] = useState(false);
+    const themeDialogRef = useRef<HTMLDialogElement>(null);
+
+    useEffect(() => {
+        document.documentElement.dataset.theme = theme;
+        localStorage.setItem(THEME_STORAGE_KEY, theme);
+    }, [theme]);
+
+    useEffect(() => {
+        if (isThemePickerOpen) {
+            const dialogElement = themeDialogRef.current;
+            dialogElement?.showModal();
+        }
+    }, [isThemePickerOpen]);
+
     const initialStats: Stats = {
         transactionTotal: 0,
         keyNumber: 0,
@@ -162,6 +196,16 @@ export function App() {
         setFundsTotal(0);
         setIsCreating(false);
         setIsCreatingFunds(false);
+    }
+
+    function openThemePicker(): void {
+        setIsThemePickerOpen(true);
+    }
+
+    function closeThemePicker(): void {
+        const dialogElement = themeDialogRef.current;
+        dialogElement?.close();
+        setIsThemePickerOpen(false);
     }
 
     function selectJohn(johnId: number): void {
@@ -257,6 +301,8 @@ export function App() {
 
     const uasm = stats.transactionTotal + stats.keyNumber;
 
+    const currentThemeLabel = THEMES.find((themeOption) => themeOption.id === theme)?.label ?? "Dark";
+
     const handleNotesChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         const nextNotes = event.target.value;
         setNotes(nextNotes);
@@ -264,7 +310,7 @@ export function App() {
     };
 
     return (
-        <div className="flex min-h-screen flex-col bg-gray-950 text-white">
+        <div className="flex min-h-screen flex-col bg-app-bg text-app-text">
             <ActionBar
                 john={currentJohn}
                 johns={johns}
@@ -276,24 +322,24 @@ export function App() {
                 onNewFund={() => setIsCreatingFunds(true)}
             />
 
-            <div className="grid flex-1 grid-cols-2 grid-rows-[2fr_3fr] gap-3 p-4">
-                <section className="overflow-auto rounded border border-gray-800 bg-gray-900/40">
+            <div className="grid flex-1 grid-cols-2 grid-rows-[2fr_3fr] gap-3 p-4 pb-14">
+                <section className="overflow-auto rounded border border-app-border bg-app-panel/40">
                     <SummaryArea
                         uasm={uasm}
                         funds={fundsTotal}
                     />
                 </section>
 
-                <section className="overflow-hidden rounded border border-gray-800 bg-gray-900/40">
+                <section className="overflow-hidden rounded border border-app-border bg-app-panel/40">
                     <textarea
                         value={notes}
                         placeholder="Notes..."
                         onChange={handleNotesChange}
-                        className="h-full w-full resize-none bg-transparent p-3 text-sm text-white outline-none"
+                        className="h-full w-full resize-none bg-transparent p-3 text-sm text-app-text outline-none"
                     />
                 </section>
 
-                <section className="overflow-auto rounded border border-gray-800 bg-gray-900/40">
+                <section className="overflow-auto rounded border border-app-border bg-app-panel/40">
                     <TransactionTable
                         key={currentJohn.id}
                         johnId={currentJohn.id}
@@ -302,7 +348,7 @@ export function App() {
                         onStatsChange={setStats}
                     />
                 </section>
-                <section className="overflow-auto rounded border border-gray-800 bg-gray-900/40">
+                <section className="overflow-auto rounded border border-app-border bg-app-panel/40">
                     <FundsTable
                         key={currentJohn.id}
                         johnId={currentJohn.id}
@@ -312,6 +358,80 @@ export function App() {
                     />
                 </section>
             </div>
+
+            <button
+                type="button"
+                onClick={openThemePicker}
+                title="Choose theme"
+                aria-haspopup="dialog"
+                className="fixed right-4 bottom-4 z-20 flex items-center gap-1.5 rounded-full border border-app-border bg-app-panel/70 px-3 py-1.5 text-xs font-medium text-app-muted shadow-sm backdrop-blur transition-colors hover:border-app-border-strong hover:text-app-text"
+            >
+                <span aria-hidden="true" className="size-2 rounded-full bg-app-accent" />
+                {currentThemeLabel}
+            </button>
+
+            <dialog
+                ref={themeDialogRef}
+                onClose={closeThemePicker}
+                className="m-auto w-full max-w-sm rounded-lg border border-app-border-strong bg-app-panel p-5 text-app-text backdrop:backdrop-blur-md"
+            >
+                <div className="flex flex-col gap-3">
+                    <h2 className="text-lg font-semibold">Theme</h2>
+
+                    <div className="-mx-1 flex max-h-72 flex-col gap-1 overflow-y-auto px-1">
+                        {THEMES.map((option) => {
+                            const optionId = option.id;
+                            const optionLabel = option.label;
+                            const optionDescription = option.description;
+                            const isActive = optionId === theme;
+
+                            const rowClassName = isActive
+                                ? "flex items-center justify-between gap-3 rounded border border-app-border-strong bg-app-raised px-3 py-2 text-left"
+                                : "flex items-center justify-between gap-3 rounded border border-transparent px-3 py-2 text-left hover:bg-app-raised";
+
+                            const selectHandler = () => setTheme(optionId);
+
+                            return (
+                                <button
+                                    key={optionId}
+                                    type="button"
+                                    onClick={selectHandler}
+                                    aria-pressed={isActive}
+                                    className={rowClassName}
+                                >
+                                    <span className="flex flex-col">
+                                        <span className="text-sm font-medium">{optionLabel}</span>
+                                        <span className="text-xs text-app-muted">
+                                            {optionDescription}
+                                        </span>
+                                    </span>
+
+                                    <span
+                                        aria-hidden="true"
+                                        data-theme={optionId}
+                                        className="flex shrink-0 items-center gap-1"
+                                    >
+                                        <span className="size-6 rounded border border-app-border bg-app-bg" />
+                                        <span className="size-6 rounded border border-app-border bg-app-panel" />
+                                        <span className="size-6 rounded border border-app-border bg-app-raised" />
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="text-xs text-app-muted-dim">[ESC] exit</div>
+                        <button
+                            type="button"
+                            onClick={closeThemePicker}
+                            className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
+                        >
+                            Done
+                        </button>
+                    </div>
+                </div>
+            </dialog>
         </div>
     );
 }

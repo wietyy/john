@@ -1,1 +1,154 @@
 @import "tailwindcss";
+
+/*
+ * Theme tokens
+ *
+ * The app UI only uses these semantic names (bg-app-panel, text-app-text, ...)
+ * instead of raw palette colors. To add a theme, copy any [data-theme="..."]
+ * block below, rename the selector and change the values, then add a matching
+ * entry to THEMES in App.tsx. The picker sets data-theme on <html> and
+ * persists the choice as "theme". The same blocks also apply to nested
+ * elements, which is how the picker renders its preview swatches.
+ */
+@theme {
+  --color-app-bg: #030712;
+  --color-app-panel: #111827;
+  --color-app-raised: #1f2937;
+  --color-app-border: #1f2937;
+  --color-app-border-strong: #374151;
+  --color-app-text: #ffffff;
+  --color-app-text-soft: #d1d5db;
+  --color-app-muted: #9ca3af;
+  --color-app-muted-dim: #6b7280;
+  --color-app-disabled: #374151;
+  --color-app-button: #374151;
+  --color-app-button-hover: #4b5563;
+  --color-app-accent: #ffffff;
+  --color-app-accent-text: #030712;
+  --color-app-positive: #22c55e;
+  --color-app-negative: #ef4444;
+  --color-app-danger: #f87171;
+  --color-app-danger-hover: #fca5a5;
+  --color-app-warn-bg: #451a03;
+  --color-app-warn-border: #78350f;
+  --color-app-warn-text: #fcd34d;
+  --color-app-warn-icon: #fbbf24;
+  --color-app-warn-icon-hover: #fde68a;
+}
+
+:root {
+  color-scheme: dark;
+  background-color: var(--color-app-bg);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-app-bg: #030712;
+  --color-app-panel: #111827;
+  --color-app-raised: #1f2937;
+  --color-app-border: #1f2937;
+  --color-app-border-strong: #374151;
+  --color-app-text: #ffffff;
+  --color-app-text-soft: #d1d5db;
+  --color-app-muted: #9ca3af;
+  --color-app-muted-dim: #6b7280;
+  --color-app-disabled: #374151;
+  --color-app-button: #374151;
+  --color-app-button-hover: #4b5563;
+  --color-app-accent: #ffffff;
+  --color-app-accent-text: #030712;
+  --color-app-positive: #22c55e;
+  --color-app-negative: #ef4444;
+  --color-app-danger: #f87171;
+  --color-app-danger-hover: #fca5a5;
+  --color-app-warn-bg: #451a03;
+  --color-app-warn-border: #78350f;
+  --color-app-warn-text: #fcd34d;
+  --color-app-warn-icon: #fbbf24;
+  --color-app-warn-icon-hover: #fde68a;
+}
+
+[data-theme="midnight"] {
+  color-scheme: dark;
+
+  --color-app-bg: #0b1020;
+  --color-app-panel: #131a2e;
+  --color-app-raised: #1b2438;
+  --color-app-border: #232e46;
+  --color-app-border-strong: #33415c;
+  --color-app-text: #e8edf7;
+  --color-app-text-soft: #c3cbdc;
+  --color-app-muted: #93a0b8;
+  --color-app-muted-dim: #6c7a94;
+  --color-app-disabled: #2b364c;
+  --color-app-button: #223049;
+  --color-app-button-hover: #2c3d5c;
+  --color-app-accent: #8ab4ff;
+  --color-app-accent-text: #0b1020;
+  --color-app-positive: #4ade80;
+  --color-app-negative: #f87171;
+  --color-app-danger: #f87171;
+  --color-app-danger-hover: #fca5a5;
+  --color-app-warn-bg: #3b2708;
+  --color-app-warn-border: #6b4a12;
+  --color-app-warn-text: #fbbf24;
+  --color-app-warn-icon: #fbbf24;
+  --color-app-warn-icon-hover: #fde68a;
+}
+
+[data-theme="oled"] {
+  color-scheme: dark;
+
+  --color-app-bg: #000000;
+  --color-app-panel: #0a0a0a;
+  --color-app-raised: #141414;
+  --color-app-border: #1f1f1f;
+  --color-app-border-strong: #2e2e2e;
+  --color-app-text: #f5f5f5;
+  --color-app-text-soft: #d4d4d4;
+  --color-app-muted: #a3a3a3;
+  --color-app-muted-dim: #737373;
+  --color-app-disabled: #3f3f3f;
+  --color-app-button: #1f1f1f;
+  --color-app-button-hover: #2a2a2a;
+  --color-app-accent: #ffffff;
+  --color-app-accent-text: #000000;
+  --color-app-positive: #4ade80;
+  --color-app-negative: #f87171;
+  --color-app-danger: #f87171;
+  --color-app-danger-hover: #fca5a5;
+  --color-app-warn-bg: #191919;
+  --color-app-warn-border: #2a2a2a;
+  --color-app-warn-text: #e5e5e5;
+  --color-app-warn-icon: #d4d4d4;
+  --color-app-warn-icon-hover: #ffffff;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  --color-app-bg: #f5f6f8;
+  --color-app-panel: #ffffff;
+  --color-app-raised: #eef1f5;
+  --color-app-border: #e3e7ed;
+  --color-app-border-strong: #cfd6e0;
+  --color-app-text: #0f172a;
+  --color-app-text-soft: #334155;
+  --color-app-muted: #64748b;
+  --color-app-muted-dim: #94a3b8;
+  --color-app-disabled: #cbd5e1;
+  --color-app-button: #e5e9ef;
+  --color-app-button-hover: #d6dde6;
+  --color-app-accent: #0f172a;
+  --color-app-accent-text: #ffffff;
+  --color-app-positive: #16a34a;
+  --color-app-negative: #dc2626;
+  --color-app-danger: #dc2626;
+  --color-app-danger-hover: #b91c1c;
+  --color-app-warn-bg: #fef3c7;
+  --color-app-warn-border: #fcd34d;
+  --color-app-warn-text: #92400e;
+  --color-app-warn-icon: #b45309;
+  --color-app-warn-icon-hover: #92400e;
+}

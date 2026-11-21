@@ -61,13 +61,13 @@ const COLUMN_HEADINGS = [
 ];
 
 export const LABEL_CLASS =
-  "block text-xs uppercase tracking-wide text-gray-400";
+  "block text-xs uppercase tracking-wide text-app-muted";
 
 export const FIELD_CLASS =
-  "w-full rounded bg-gray-800 px-2 py-1.5 text-sm text-white outline-none focus:ring-1 focus:ring-gray-500";
+  "w-full rounded bg-app-raised px-2 py-1.5 text-sm text-app-text outline-none focus:ring-1 focus:ring-app-border-strong";
 
 export const ICON_BUTTON =
-  "inline-flex size-4 items-center justify-center text-gray-400 transition hover:text-white disabled:cursor-not-allowed disabled:text-gray-700";
+  "inline-flex size-4 items-center justify-center text-app-muted transition hover:text-app-text disabled:cursor-not-allowed disabled:text-app-disabled";
 
 function readTransactions(johnId: number): Transaction[] {
   const scopedKey = getScopedStorageKey(TRANSACTIONS_STORAGE_KEY, johnId);
@@ -238,7 +238,7 @@ function TransactionModal({
     <dialog
       ref={dialogRef}
       onClose={onClose}
-      className="m-auto w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-6 text-white backdrop:backdrop-blur-md"
+      className="m-auto w-full max-w-md rounded-lg border border-app-border-strong bg-app-panel p-6 text-app-text backdrop:backdrop-blur-md"
     >
       <form className="flex flex-col gap-4" onSubmit={submitTransaction}>
         <h2 className="text-lg font-semibold">
@@ -253,7 +253,7 @@ function TransactionModal({
             required
             disabled={isEditMode}
             onChange={(event) => setDate(event.target.value)}
-            className={`${FIELD_CLASS} disabled:text-gray-500`}
+            className={`${FIELD_CLASS} disabled:text-app-muted-dim`}
           />
         </label>
 
@@ -298,13 +298,13 @@ function TransactionModal({
               const dialogElement = dialogRef.current;
               dialogElement?.close();
             }}
-            className="rounded px-3 py-1 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white"
+            className="rounded px-3 py-1 text-sm font-medium text-app-text-soft hover:bg-app-raised hover:text-app-text"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+            className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
           >
             {submitButtonText}
           </button>
@@ -459,7 +459,7 @@ export function TransactionTable({
           type="button"
           aria-label="Delete transaction"
           onClick={deleteTransactionHandler}
-          className="inline-flex size-4 items-center justify-center text-red-500 transition hover:text-red-300"
+          className="inline-flex size-4 items-center justify-center text-app-negative transition hover:text-app-danger-hover"
         >
           <DeleteIcon />
         </button>
@@ -469,9 +469,9 @@ export function TransactionTable({
     rows.push(
       <tr
         key={transactionId}
-        className="border-b border-gray-800 transition hover:bg-gray-900/60"
+        className="border-b border-app-border transition hover:bg-app-panel/60"
       >
-        <td className="py-2 pr-4 text-right text-sm text-gray-400">
+        <td className="py-2 pr-4 text-right text-sm text-app-muted">
           {transaction.date}
         </td>
         <td className="px-2 py-2 text-sm">{transaction.title}</td>
@@ -510,10 +510,10 @@ export function TransactionTable({
       const noteKey = `${transactionId}-note`;
 
       rows.push(
-        <tr key={noteKey} className="border-b border-gray-800">
+        <tr key={noteKey} className="border-b border-app-border">
           <td
             colSpan={COLUMN_HEADINGS.length}
-            className="bg-gray-900/40 px-2 py-2 text-sm text-gray-400"
+            className="bg-app-panel/40 px-2 py-2 text-sm text-app-muted"
           >
             {noteText}
           </td>
@@ -542,7 +542,7 @@ export function TransactionTable({
     <div className="p-4">
       <table className="w-full border-collapse text-left">
         <thead>
-          <tr className="border-b border-gray-700 text-xs uppercase tracking-wide text-gray-500">
+          <tr className="border-b border-app-border-strong text-xs uppercase tracking-wide text-app-muted-dim">
             {COLUMN_HEADINGS.map((heading) => {
               const headerClass = getHeaderClass(heading);
               return (
@@ -559,12 +559,12 @@ export function TransactionTable({
         </thead>
 
         <tbody>
-          <tr className="border-b border-amber-900/50 bg-amber-950/60">
+          <tr className="border-b border-app-warn-border/50 bg-app-warn-bg/60">
             <td className="py-2 pr-4" />
-            <td className="px-2 py-2 text-sm font-semibold text-amber-300">
+            <td className="px-2 py-2 text-sm font-semibold text-app-warn-text">
               Key Number
             </td>
-            <td className="px-2 py-2 text-right text-sm font-semibold tabular-nums text-amber-300">
+            <td className="px-2 py-2 text-right text-sm font-semibold tabular-nums text-app-warn-text">
               {isEditingKeyNumber ? (
                 <input
                   autoFocus
@@ -575,7 +575,7 @@ export function TransactionTable({
                   onKeyDown={(event) => {
                     if (event.key === "Enter") event.currentTarget.blur();
                   }}
-                  className="w-24 rounded bg-gray-700 px-2 py-0.5 text-right text-sm text-white outline-none"
+                  className="w-24 rounded bg-app-button px-2 py-0.5 text-right text-sm text-app-text outline-none"
                 />
               ) : Number(keyNumber.toFixed(2))}
             </td>
@@ -585,7 +585,7 @@ export function TransactionTable({
                 type="button"
                 aria-label="Edit key number"
                 onClick={startEditingKeyNumber}
-                className="inline-flex size-4 items-center justify-center text-amber-400 transition hover:text-amber-200"
+                className="inline-flex size-4 items-center justify-center text-app-warn-icon transition hover:text-app-warn-icon-hover"
               >
                 <EditIcon />
               </button>
@@ -596,10 +596,10 @@ export function TransactionTable({
           {hasRows ? (
             rows
           ) : (
-            <tr className="border-b border-gray-800">
+            <tr className="border-b border-app-border">
               <td
                 colSpan={headingCount}
-                className="px-2 py-6 text-center text-sm text-gray-500"
+                className="px-2 py-6 text-center text-sm text-app-muted-dim"
               >
                 No transactions yet.
               </td>

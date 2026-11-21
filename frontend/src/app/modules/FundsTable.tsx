@@ -140,7 +140,7 @@ function FundModal({ mode, fund, onSubmit, onClose }: FundModalProps) {
         <dialog
             ref={dialogRef}
             onClose={onClose}
-            className="m-auto w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-6 text-white backdrop:backdrop-blur-md"
+            className="m-auto w-full max-w-md rounded-lg border border-app-border-strong bg-app-panel p-6 text-app-text backdrop:backdrop-blur-md"
         >
             <form className="flex flex-col gap-4" onSubmit={submitFund}>
                 <h2 className="text-lg font-semibold">
@@ -200,13 +200,13 @@ function FundModal({ mode, fund, onSubmit, onClose }: FundModalProps) {
                             const dialogElement = dialogRef.current;
                             dialogElement?.close();
                         }}
-                        className="rounded px-3 py-1 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white"
+                        className="rounded px-3 py-1 text-sm font-medium text-app-text-soft hover:bg-app-raised hover:text-app-text"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+                        className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
                     >
                         {submitButtonText}
                     </button>
@@ -343,12 +343,12 @@ export function FundsTable({
         const isOver = overUnder > 0;
         const isUnder = overUnder < 0;
 
-        let overUnderColor = "text-white";
+        let overUnderColor = "text-app-text";
 
         if (isOver) {
-            overUnderColor = "text-green-500";
+            overUnderColor = "text-app-positive";
         } else if (isUnder) {
-            overUnderColor = "text-red-500";
+            overUnderColor = "text-app-negative";
         }
 
         const hasNote = fund.note !== undefined;
@@ -357,13 +357,13 @@ export function FundsTable({
         rows.push(
             <tr
                 key={fundId}
-                className="border-b border-gray-800 transition hover:bg-gray-900/60"
+                className="border-b border-app-border transition hover:bg-app-panel/60"
             >
                 <td className="px-2 py-2 text-sm">{fund.title}</td>
                 <td className="px-2 py-2 text-right text-sm tabular-nums">
                     {Number(fund.amount.toFixed(2))}
                 </td>
-                <td className="px-2 py-2 text-right text-sm tabular-nums text-gray-400">
+                <td className="px-2 py-2 text-right text-sm tabular-nums text-app-muted">
                     {Number(fund.goal.toFixed(2))}
                 </td>
                 <td
@@ -397,7 +397,7 @@ export function FundsTable({
                         type="button"
                         aria-label="Delete fund"
                         onClick={deleteFundHandler}
-                        className="inline-flex size-4 items-center justify-center text-red-500 transition hover:text-red-300"
+                        className="inline-flex size-4 items-center justify-center text-app-negative transition hover:text-app-danger-hover"
                     >
                         <DeleteIcon />
                     </button>
@@ -411,11 +411,11 @@ export function FundsTable({
             rows.push(
                 <tr
                     key={noteKey}
-                    className="border-b border-gray-800"
+                    className="border-b border-app-border"
                 >
                     <td
                         colSpan={COLUMN_HEADINGS.length}
-                        className="bg-gray-900/40 px-2 py-2 text-sm text-gray-400"
+                        className="bg-app-panel/40 px-2 py-2 text-sm text-app-muted"
                     >
                         {noteText}
                     </td>
@@ -446,7 +446,7 @@ export function FundsTable({
         <div className="p-4">
             <table className="w-full border-collapse text-left">
                 <thead>
-                    <tr className="border-b border-gray-700 text-xs uppercase tracking-wide text-gray-500">
+                    <tr className="border-b border-app-border-strong text-xs uppercase tracking-wide text-app-muted-dim">
                         {COLUMN_HEADINGS.map((heading) => {
                             const headerClass = getHeaderClass(heading);
                             return (
@@ -466,10 +466,10 @@ export function FundsTable({
                     {hasRows ? (
                         rows
                     ) : (
-                        <tr className="border-b border-gray-800">
+                        <tr className="border-b border-app-border">
                             <td
                                 colSpan={headingCount}
-                                className="px-2 py-6 text-center text-sm text-gray-500"
+                                className="px-2 py-6 text-center text-sm text-app-muted-dim"
                             >
                                 No funds yet.
                             </td>

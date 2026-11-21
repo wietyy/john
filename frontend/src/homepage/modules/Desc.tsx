@@ -8,7 +8,7 @@ const paragraphClassName = "mb-4 leading-relaxed";
 
 export function Description() {
     return (
-        <div className="max-w-3xl mx-auto text-white mt-5">
+        <div className="max-w-3xl mx-auto text-app-text mt-5">
             <ReactMarkdown
                 components={{
                     h1: (props) => <h1 className={headingClassName} {...props} />,
@@ -17,13 +17,13 @@ export function Description() {
                     p: (props) => <p className={paragraphClassName} {...props} />,
                     strong: (props) => <strong className="font-semibold" {...props} />,
                     em: (props) => <em className="italic" {...props} />,
-                    code: (props) => <code className="bg-gray-800 px-1 py-0.5 rounded" {...props} />,
+                    code: (props) => <code className="bg-app-raised px-1 py-0.5 rounded" {...props} />,
                 }}
             >
                 {description}
             </ReactMarkdown>
             <div className="mx-auto w-1/4 pb-5">
-                <Link to="/app" className="grid place-items-center inline-block rounded bg-gray-700 px-6 py-3 text-sm font-medium text-white hover:bg-gray-600">
+                <Link to="/app" className="grid place-items-center inline-block rounded bg-app-button px-6 py-3 text-sm font-medium text-app-text hover:bg-app-button-hover">
                     Let's Go!
                 </Link>
             </div>

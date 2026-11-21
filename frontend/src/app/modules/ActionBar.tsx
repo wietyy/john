@@ -276,7 +276,7 @@ export function ActionBar({
   }
 
   return (
-    <div className="flex items-center justify-between gap-4 bg-gray-900 px-4 py-2 text-white">
+    <div className="flex items-center justify-between gap-4 bg-app-panel px-4 py-2 text-app-text">
       <div className="flex items-center gap-2">
       <img src="https://raw.githubusercontent.com/wietyy/john/main/frontend/src/mike.svg" alt="prison mike :D" className="w-6 h-6" />
         {isEditingName ? (
@@ -288,7 +288,7 @@ export function ActionBar({
             onKeyDown={(event) => {
               if (event.key === "Enter") event.currentTarget.blur();
             }}
-            className="rounded bg-gray-800 px-2 py-0.5 text-lg font-semibold text-white outline-none"
+            className="rounded bg-app-raised px-2 py-0.5 text-lg font-semibold text-app-text outline-none"
           />
         ) : (
           <h1
@@ -303,21 +303,21 @@ export function ActionBar({
             <button
               type="button"
               onClick={handleWriteCloud}
-              className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+              className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
             >
               Write Cloud
             </button>
             <button
               type="button"
               onClick={handleLoadCloud}
-              className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+              className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
             >
               Load Cloud
             </button>
             <button
               type="button"
               onClick={logout}
-              className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+              className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
             >
               Logout
             </button>
@@ -326,7 +326,7 @@ export function ActionBar({
           <button
             type="button"
             onClick={() => { login(); }}
-            className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+            className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
           >
             Login
           </button>
@@ -334,14 +334,14 @@ export function ActionBar({
         <button
           type="button"
           onClick={() => { saveLocalFile(); }}
-          className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+          className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
         >
           Save File
         </button>
         <button
           type="button"
           onClick={() => { loadLocalFile(); }}
-          className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+          className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
         >
           Load File
         </button>
@@ -351,21 +351,21 @@ export function ActionBar({
         <button
           type="button"
           onClick={onNewFund}
-          className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+          className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
         >
           New Fund
         </button>
         <button
           type="button"
           onClick={onNewTransaction}
-          className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+          className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
         >
           New Transaction
         </button>
         <button
           type="button"
           onClick={openSwitchModal}
-          className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+          className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
         >
           Switch JOHN
         </button>
@@ -374,7 +374,7 @@ export function ActionBar({
       <dialog
         ref={dialogRef}
         onClose={closeSwitchModal}
-        className="m-auto w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-6 text-white backdrop:backdrop-blur-md"
+        className="m-auto w-full max-w-md rounded-lg border border-app-border-strong bg-app-panel p-6 text-app-text backdrop:backdrop-blur-md"
       >
         <div className="flex flex-col gap-4">
           <h2 className="text-lg font-semibold">Switch JOHN</h2>
@@ -384,8 +384,8 @@ export function ActionBar({
               const optionName = option.name;
               const isActive = option.id === john.id;
               const buttonClasses = isActive
-                ? "rounded px-3 py-1 text-sm font-medium bg-white text-gray-950"
-                : "rounded px-3 py-1 text-sm font-medium bg-gray-800 text-white hover:bg-gray-600";
+                ? "rounded px-3 py-1 text-sm font-medium bg-app-accent text-app-accent-text"
+                : "rounded px-3 py-1 text-sm font-medium bg-app-raised text-app-text hover:bg-app-button-hover";
 
               return (
                 <button
@@ -404,26 +404,26 @@ export function ActionBar({
             })}
           </div>
           <div className="flex items-center justify-between gap-2">
-            <div className="text-xs text-gray-500">[ESC] exit</div>
+            <div className="text-xs text-app-muted-dim">[ESC] exit</div>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={requestDeleteJohn}
-                className="rounded px-3 py-1 text-sm font-medium text-red-400 hover:bg-gray-800 hover:text-red-300"
+                className="rounded px-3 py-1 text-sm font-medium text-app-danger hover:bg-app-raised hover:text-app-danger-hover"
               >
                 Delete
               </button>
               <button
                 type="button"
                 onClick={closeSwitchModal}
-                className="rounded px-3 py-1 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white"
+                className="rounded px-3 py-1 text-sm font-medium text-app-text-soft hover:bg-app-raised hover:text-app-text"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleCreateJohnClick}
-                className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+                className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
               >
                 New JOHN
               </button>
