@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { getCloud, setCloud } from "../cloud";
-import { encrypt, decrypt } from "@wietyy/easycrypt";
 
 export const JOHN_STORAGE_KEY = "johns";
 export const CURRENT_JOHN_ID_STORAGE_KEY = "currentJohnId";
@@ -21,6 +19,11 @@ export function getScopedStorageKey(baseKey: string, johnId: number): string {
 type ActionBarProps = {
   john: John;
   johns: John[];
+  isLoggedIn: boolean;
+  onLogin: () => void;
+  onLogout: () => void;
+  onWriteCloud: () => void;
+  onLoadCloud: () => void;
   onSwitchJohn: (johnId: number) => void;
   onCreateJohn: () => void;
   onRenameJohn: (johnId: number, name: string) => void;
@@ -32,6 +35,11 @@ type ActionBarProps = {
 export function ActionBar({
   john,
   johns,
+  isLoggedIn,
+  onLogin,
+  onLogout,
+  onWriteCloud,
+  onLoadCloud,
   onSwitchJohn,
   onCreateJohn,
   onRenameJohn,
@@ -43,37 +51,6 @@ export function ActionBar({
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(john.name);
   const [isSwitching, setIsSwitching] = useState(false);
-  const [loginStatus, setLoginStatus] = useState(false);
-
-  function login() {
-    const existingKey = localStorage.getItem("loginKey");
-
-    if (existingKey) {
-      setLoginStatus(true);
-    } else {
-      const promptMessage = "Enter your secret key. This should be something no one can possibly guess.";
-      const key = window.prompt(promptMessage);
-
-      if (key === null) {
-        return;
-      }
-
-      const loginKeyStorageKey = "loginKey";
-      localStorage.setItem(loginKeyStorageKey, key);
-      setLoginStatus(true);
-    }
-  }
-
-  function logout() {
-    const confirmMessage = "Are you sure you want to log out?";
-    const isConfirmed = window.confirm(confirmMessage);
-
-    if (isConfirmed) {
-      const loginKeyStorageKey = "loginKey";
-      localStorage.removeItem(loginKeyStorageKey);
-      setLoginStatus(false);
-    }
-  }
 
   useEffect(() => {
     if (isSwitching) {
@@ -164,60 +141,6 @@ export function ActionBar({
     setIsEditingName(false);
   }
 
-  async function handleWriteCloud() {
-    const dataToSend: Record<string, string> = {};
-    const storageLength = localStorage.length;
-
-    for (let i = 0; i < storageLength; i++) {
-      const storageKey = localStorage.key(i);
-      const loginKey = "loginKey";
-
-      if (storageKey && storageKey !== loginKey) {
-        const storedValue = localStorage.getItem(storageKey) || "";
-        dataToSend[storageKey] = storedValue;
-      }
-    }
-
-    const loginKey = localStorage.getItem("loginKey") || "";
-    const password = loginKey;
-    const jsonData = JSON.stringify(dataToSend);
-
-    const encryptedData = await encrypt(jsonData, password);
-    await setCloud(password, encryptedData);
-    alert("Data synced to cloud successfully!");
-  }
-
-  async function handleLoadCloud() {
-    const loginKey = localStorage.getItem("loginKey") || "";
-    const password = loginKey;
-    const encryptedData = await getCloud(password);
-
-    const startsWithBrace = encryptedData.startsWith('{');
-
-    let decryptedData: string;
-
-    if (startsWithBrace) {
-      decryptedData = encryptedData;
-    } else {
-      decryptedData = await decrypt(encryptedData, password);
-    }
-
-    try {
-      const parsedData = JSON.parse(decryptedData);
-
-      for (const key in parsedData) {
-        const value = parsedData[key];
-        localStorage.setItem(key, value);
-      }
-    } catch (e) {
-      // If parsing fails, just set the raw data
-      const fallbackKey = JOHN_STORAGE_KEY;
-      localStorage.setItem(fallbackKey, decryptedData);
-    }
-
-    window.location.reload();
-  }
-
   function handleCreateJohnClick() {
     onCreateJohn();
     closeSwitchModal();
@@ -298,25 +221,25 @@ export function ActionBar({
             {john.name} JOHN
           </h1>
         )}
-        {loginStatus ? (
+        {isLoggedIn ? (
           <>
             <button
               type="button"
-              onClick={handleWriteCloud}
+              onClick={onWriteCloud}
               className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
             >
               Write Cloud
             </button>
             <button
               type="button"
-              onClick={handleLoadCloud}
+              onClick={onLoadCloud}
               className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
             >
               Load Cloud
             </button>
             <button
               type="button"
-              onClick={logout}
+              onClick={onLogout}
               className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
             >
               Logout
@@ -325,7 +248,7 @@ export function ActionBar({
         ) : (
           <button
             type="button"
-            onClick={() => { login(); }}
+            onClick={onLogin}
             className="rounded bg-app-button px-3 py-1 text-sm font-medium text-app-text hover:bg-app-button-hover"
           >
             Login

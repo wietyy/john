@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { decrypt, encrypt } from "@wietyy/easycrypt";
+import { getCloud, setCloud } from "./cloud";
 import {
     ActionBar,
     CURRENT_JOHN_ID_STORAGE_KEY,
@@ -16,13 +18,85 @@ const NOTES_STORAGE_KEY = "textNotes";
 const THEME_STORAGE_KEY = "theme";
 
 const THEMES = [
-    { id: "dark", label: "Dark", description: "Charcoal panels on a near-black base" },
-    { id: "midnight", label: "Midnight", description: "Blue-black with cool grey surfaces" },
-    { id: "oled", label: "OLED", description: "Pure black with grey shades" },
-    { id: "light", label: "Light", description: "Bright surfaces with dark text" },
+    { id: "dark", label: "Dark" },
+    { id: "midnight", label: "Midnight" },
+    { id: "oled", label: "OLED" },
+    { id: "light", label: "Light" },
 ] as const;
 
 type Theme = (typeof THEMES)[number]["id"];
+
+const LOGIN_KEY_STORAGE_KEY = "loginKey";
+const CLOUD_AUTO_LOADED_STORAGE_KEY = "cloudAutoLoaded";
+const CLOUD_SYNC_INTERVAL_MS = 15 * 1000;
+
+type CloudStatus = "off" | "idle" | "saving" | "saved" | "error";
+
+const CLOUD_STATUS_LABELS: Record<CloudStatus, string> = {
+    off: "Cloud sync off",
+    idle: "Cloud sync on",
+    saving: "Saving to cloud…",
+    saved: "Saved to cloud",
+    error: "Cloud save failed",
+};
+
+const CLOUD_STATUS_DOT_CLASSES: Record<CloudStatus, string> = {
+    off: "bg-app-muted-dim",
+    idle: "bg-app-muted",
+    saving: "bg-app-warn-icon",
+    saved: "bg-app-positive",
+    error: "bg-app-negative",
+};
+
+function readLoginKey(): string {
+    const storedKey = localStorage.getItem(LOGIN_KEY_STORAGE_KEY);
+    return storedKey ?? "";
+}
+
+function collectLocalData(): Record<string, string> {
+    const collected: Record<string, string> = {};
+    const storageLength = localStorage.length;
+
+    for (let index = 0; index < storageLength; index++) {
+        const storageKey = localStorage.key(index);
+        const isLoginKey = storageKey === LOGIN_KEY_STORAGE_KEY;
+
+        if (storageKey && !isLoginKey) {
+            const storedValue = localStorage.getItem(storageKey) ?? "";
+            collected[storageKey] = storedValue;
+        }
+    }
+
+    return collected;
+}
+
+async function decodeCloudData(encryptedData: string, password: string): Promise<string> {
+    const startsWithBrace = encryptedData.startsWith("{");
+
+    if (startsWithBrace) {
+        return encryptedData;
+    }
+
+    const decryptedData = await decrypt(encryptedData, password);
+    return decryptedData;
+}
+
+function applyCloudData(parsedData: Record<string, string>): boolean {
+    let hasChanged = false;
+
+    for (const key in parsedData) {
+        const value = parsedData[key];
+        const stringValue = String(value);
+        const currentValue = localStorage.getItem(key);
+
+        if (currentValue !== stringValue) {
+            localStorage.setItem(key, stringValue);
+            hasChanged = true;
+        }
+    }
+
+    return hasChanged;
+}
 
 function readTheme(): Theme {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
@@ -147,6 +221,15 @@ export function App() {
     const [isCreating, setIsCreating] = useState(false);
     const [isCreatingFunds, setIsCreatingFunds] = useState(false);
 
+    const [loginKey, setLoginKey] = useState<string>(readLoginKey);
+    const [cloudStatus, setCloudStatus] = useState<CloudStatus>(() => {
+        const hasLoginKey = readLoginKey().length > 0;
+        const initialStatus: CloudStatus = hasLoginKey ? "idle" : "off";
+        return initialStatus;
+    });
+
+    const lastSavedPayloadRef = useRef<string>("");
+
     const initializedNotes = readNotes(currentJohnId);
     const [notes, setNotes] = useState(() => initializedNotes);
 
@@ -166,6 +249,64 @@ export function App() {
             dialogElement?.showModal();
         }
     }, [isThemePickerOpen]);
+
+    useEffect(() => {
+        const password = readLoginKey();
+        const isLoggedIn = password.length > 0;
+
+        if (!isLoggedIn) {
+            return;
+        }
+
+        const hasAutoLoaded = sessionStorage.getItem(CLOUD_AUTO_LOADED_STORAGE_KEY);
+
+        if (hasAutoLoaded) {
+            return;
+        }
+
+        sessionStorage.setItem(CLOUD_AUTO_LOADED_STORAGE_KEY, "true");
+        void loadCloud(password, false);
+    }, []);
+
+    useEffect(() => {
+        const isLoggedIn = loginKey.length > 0;
+
+        if (!isLoggedIn) {
+            return;
+        }
+
+        const saveInterval = window.setInterval(() => {
+            void saveCloud(loginKey, false);
+        }, CLOUD_SYNC_INTERVAL_MS);
+
+        const clearSaveInterval = () => window.clearInterval(saveInterval);
+        return clearSaveInterval;
+    }, [loginKey]);
+
+    useEffect(() => {
+        function handleBeforeUnload(event: BeforeUnloadEvent): void {
+            const hasLoginKey = readLoginKey().length > 0;
+
+            if (!hasLoginKey) {
+                return;
+            }
+
+            const currentPayload = JSON.stringify(collectLocalData());
+            const hasUnsyncedChanges = currentPayload !== lastSavedPayloadRef.current;
+
+            if (hasUnsyncedChanges) {
+                event.preventDefault();
+                event.returnValue = "";
+            }
+        }
+
+        window.addEventListener("beforeunload", handleBeforeUnload);
+
+        const removeBeforeUnloadListener = () => {
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+        };
+        return removeBeforeUnloadListener;
+    }, []);
 
     const initialStats: Stats = {
         transactionTotal: 0,
@@ -293,6 +434,109 @@ export function App() {
         }
     }
 
+    function login(): void {
+        const existingKey = readLoginKey();
+
+        if (existingKey) {
+            setLoginKey(existingKey);
+            setCloudStatus("idle");
+            return;
+        }
+
+        const promptMessage = "Enter your secret key. This should be something no one can possibly guess.";
+        const key = window.prompt(promptMessage);
+
+        if (key === null) {
+            return;
+        }
+
+        localStorage.setItem(LOGIN_KEY_STORAGE_KEY, key);
+        lastSavedPayloadRef.current = "";
+        setLoginKey(key);
+        setCloudStatus("idle");
+    }
+
+    function logout(): void {
+        const confirmMessage = "Are you sure you want to log out?";
+        const isConfirmed = window.confirm(confirmMessage);
+
+        if (!isConfirmed) {
+            return;
+        }
+
+        localStorage.removeItem(LOGIN_KEY_STORAGE_KEY);
+        sessionStorage.removeItem(CLOUD_AUTO_LOADED_STORAGE_KEY);
+        lastSavedPayloadRef.current = "";
+        setLoginKey("");
+        setCloudStatus("off");
+    }
+
+    async function saveCloud(password: string, isManual: boolean): Promise<void> {
+        const dataToSend = collectLocalData();
+        const jsonData = JSON.stringify(dataToSend);
+        const hasAlreadySaved = jsonData === lastSavedPayloadRef.current;
+
+        if (hasAlreadySaved && !isManual) {
+            return;
+        }
+
+        setCloudStatus("saving");
+
+        try {
+            const encryptedData = await encrypt(jsonData, password);
+            const result = await setCloud(password, encryptedData);
+            const isSuccess = result === "success";
+
+            if (isSuccess) {
+                lastSavedPayloadRef.current = jsonData;
+                setCloudStatus("saved");
+            } else {
+                setCloudStatus("error");
+            }
+        } catch {
+            setCloudStatus("error");
+        }
+    }
+
+    async function loadCloud(password: string, isManual: boolean): Promise<void> {
+        try {
+            const encryptedData = await getCloud(password);
+            const hasCloudData = encryptedData.length > 0;
+
+            if (!hasCloudData) {
+                if (isManual) {
+                    window.alert("No cloud data found for this key.");
+                }
+                return;
+            }
+
+            const decryptedData = await decodeCloudData(encryptedData, password);
+            const parsedData = JSON.parse(decryptedData) as Record<string, string>;
+            const hasChanged = applyCloudData(parsedData);
+
+            // What is in local storage now matches the cloud copy, so the refresh
+            // below shouldn't trip the unsaved changes warning.
+            const loadedPayload = JSON.stringify(collectLocalData());
+            lastSavedPayloadRef.current = loadedPayload;
+
+            if (hasChanged || isManual) {
+                window.location.reload();
+            }
+        } catch {
+            if (isManual) {
+                window.alert("Failed to load cloud data.");
+            }
+        }
+    }
+
+    function handleWriteCloud(): void {
+        void saveCloud(loginKey, true);
+    }
+
+    function handleLoadCloud(): void {
+        void loadCloud(loginKey, true);
+    }
+
     const currentJohnExists = currentJohn !== null && currentJohn !== undefined;
 
     if (!currentJohnExists) {
@@ -302,6 +546,9 @@ export function App() {
     const uasm = stats.transactionTotal + stats.keyNumber;
 
     const currentThemeLabel = THEMES.find((themeOption) => themeOption.id === theme)?.label ?? "Dark";
+    const cloudStatusLabel = CLOUD_STATUS_LABELS[cloudStatus];
+    const cloudStatusDotClass = CLOUD_STATUS_DOT_CLASSES[cloudStatus];
+    const isLoggedIn = loginKey.length > 0;
 
     const handleNotesChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         const nextNotes = event.target.value;
@@ -314,6 +561,11 @@ export function App() {
             <ActionBar
                 john={currentJohn}
                 johns={johns}
+                isLoggedIn={isLoggedIn}
+                onLogin={login}
+                onLogout={logout}
+                onWriteCloud={handleWriteCloud}
+                onLoadCloud={handleLoadCloud}
                 onSwitchJohn={selectJohn}
                 onCreateJohn={createJohn}
                 onRenameJohn={renameJohn}
@@ -322,7 +574,7 @@ export function App() {
                 onNewFund={() => setIsCreatingFunds(true)}
             />
 
-            <div className="grid flex-1 grid-cols-2 grid-rows-[2fr_3fr] gap-3 p-4 pb-14">
+            <div className="grid flex-1 grid-cols-2 grid-rows-[2fr_3fr] gap-3 p-4">
                 <section className="overflow-auto rounded border border-app-border bg-app-panel/40">
                     <SummaryArea
                         uasm={uasm}
@@ -359,16 +611,23 @@ export function App() {
                 </section>
             </div>
 
-            <button
-                type="button"
-                onClick={openThemePicker}
-                title="Choose theme"
-                aria-haspopup="dialog"
-                className="fixed right-4 bottom-4 z-20 flex items-center gap-1.5 rounded-full border border-app-border bg-app-panel/70 px-3 py-1.5 text-xs font-medium text-app-muted shadow-sm backdrop-blur transition-colors hover:border-app-border-strong hover:text-app-text"
-            >
-                <span aria-hidden="true" className="size-2 rounded-full bg-app-accent" />
-                {currentThemeLabel}
-            </button>
+            <footer className="flex items-center justify-between gap-4 border-t border-app-border bg-app-panel px-4 py-1 text-xs text-app-muted">
+                <span className="flex items-center gap-1.5" role="status">
+                    <span aria-hidden="true" className={`size-1.5 rounded-full ${cloudStatusDotClass}`} />
+                    {cloudStatusLabel}
+                </span>
+
+                <button
+                    type="button"
+                    onClick={openThemePicker}
+                    title="Choose theme"
+                    aria-haspopup="dialog"
+                    className="flex items-center gap-1.5 rounded-full border border-app-border bg-app-raised px-2.5 py-0.5 font-medium text-app-muted transition-colors hover:border-app-border-strong hover:text-app-text"
+                >
+                    <span aria-hidden="true" className="size-2 rounded-full bg-app-accent" />
+                    {currentThemeLabel}
+                </button>
+            </footer>
 
             <dialog
                 ref={themeDialogRef}
@@ -382,7 +641,6 @@ export function App() {
                         {THEMES.map((option) => {
                             const optionId = option.id;
                             const optionLabel = option.label;
-                            const optionDescription = option.description;
                             const isActive = optionId === theme;
 
                             const rowClassName = isActive
@@ -399,12 +657,7 @@ export function App() {
                                     aria-pressed={isActive}
                                     className={rowClassName}
                                 >
-                                    <span className="flex flex-col">
-                                        <span className="text-sm font-medium">{optionLabel}</span>
-                                        <span className="text-xs text-app-muted">
-                                            {optionDescription}
-                                        </span>
-                                    </span>
+                                    <span className="text-sm font-medium">{optionLabel}</span>
 
                                     <span
                                         aria-hidden="true"
