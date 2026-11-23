@@ -238,7 +238,7 @@ function TransactionModal({
     <dialog
       ref={dialogRef}
       onClose={onClose}
-      className="m-auto w-full max-w-md rounded-lg border border-app-border-strong bg-app-panel p-6 text-app-text backdrop:backdrop-blur-md"
+      className="m-auto w-full max-w-md rounded-lg border border-app-border-strong bg-app-dialog p-6 text-app-text backdrop:backdrop-blur-md"
     >
       <form className="flex flex-col gap-4" onSubmit={submitTransaction}>
         <h2 className="text-lg font-semibold">
@@ -469,7 +469,7 @@ export function TransactionTable({
     rows.push(
       <tr
         key={transactionId}
-        className="border-b border-app-border transition hover:bg-app-panel/60"
+        className="border-b border-app-border transition hover:bg-app-hover"
       >
         <td className="py-2 pr-4 text-right text-sm text-app-muted">
           {transaction.date}
@@ -513,7 +513,7 @@ export function TransactionTable({
         <tr key={noteKey} className="border-b border-app-border">
           <td
             colSpan={COLUMN_HEADINGS.length}
-            className="bg-app-panel/40 px-2 py-2 text-sm text-app-muted"
+            className="bg-app-surface px-2 py-2 text-sm text-app-muted"
           >
             {noteText}
           </td>

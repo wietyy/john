@@ -12,16 +12,29 @@ import {
 } from "./modules/ActionBar";
 import { FundsTable } from "./modules/FundsTable";
 import { SummaryArea } from "./modules/SummaryArea";
-import { TransactionTable, type Stats } from "./modules/TransactionTable";
+import {
+    FIELD_CLASS,
+    LABEL_CLASS,
+    TransactionTable,
+    type Stats,
+} from "./modules/TransactionTable";
 
 const NOTES_STORAGE_KEY = "textNotes";
 const THEME_STORAGE_KEY = "theme";
+const BACKGROUND_STORAGE_KEY = "customBackgroundImage";
+const BLOCK_OPACITY_STORAGE_KEY = "customBlockOpacity";
+const IMAGE_BLUR_STORAGE_KEY = "customBackgroundBlur";
+
+const DEFAULT_BLOCK_OPACITY = 90;
+const DEFAULT_IMAGE_BLUR = 10;
+const MAX_IMAGE_BLUR = 10;
 
 const THEMES = [
     { id: "dark", label: "Dark" },
     { id: "midnight", label: "Midnight" },
     { id: "oled", label: "OLED" },
     { id: "light", label: "Light" },
+    { id: "custom", label: "Custom" },
 ] as const;
 
 type Theme = (typeof THEMES)[number]["id"];
@@ -96,6 +109,48 @@ function applyCloudData(parsedData: Record<string, string>): boolean {
     }
 
     return hasChanged;
+}
+
+function readCustomBackground(): string {
+    const stored = localStorage.getItem(BACKGROUND_STORAGE_KEY);
+    return stored ?? "";
+}
+
+function readPercentSetting(storageKey: string, fallback: number, max: number): number {
+    const stored = localStorage.getItem(storageKey);
+
+    if (stored === null) {
+        return fallback;
+    }
+
+    const parsed = Number(stored);
+    const isNumber = Number.isFinite(parsed);
+
+    if (!isNumber) {
+        return fallback;
+    }
+
+    const clamped = Math.min(max, Math.max(0, parsed));
+    const rounded = Math.round(clamped);
+    return rounded;
+}
+
+function readBlockOpacity(): number {
+    const storedOpacity = readPercentSetting(
+        BLOCK_OPACITY_STORAGE_KEY,
+        DEFAULT_BLOCK_OPACITY,
+        100,
+    );
+    return storedOpacity;
+}
+
+function readImageBlur(): number {
+    const storedBlur = readPercentSetting(
+        IMAGE_BLUR_STORAGE_KEY,
+        DEFAULT_IMAGE_BLUR,
+        MAX_IMAGE_BLUR,
+    );
+    return storedBlur;
 }
 
 function readTheme(): Theme {
@@ -238,10 +293,66 @@ export function App() {
     const [isThemePickerOpen, setIsThemePickerOpen] = useState(false);
     const themeDialogRef = useRef<HTMLDialogElement>(null);
 
+    const initializedBackground = readCustomBackground();
+    const [customBackground, setCustomBackground] = useState(initializedBackground);
+    const [backgroundDraft, setBackgroundDraft] = useState(initializedBackground);
+
+    const initializedBlockOpacity = readBlockOpacity();
+    const [blockOpacity, setBlockOpacity] = useState(initializedBlockOpacity);
+
+    const initializedImageBlur = readImageBlur();
+    const [imageBlur, setImageBlur] = useState(initializedImageBlur);
+
     useEffect(() => {
         document.documentElement.dataset.theme = theme;
         localStorage.setItem(THEME_STORAGE_KEY, theme);
     }, [theme]);
+
+    useEffect(() => {
+        const isCustomTheme = theme === "custom";
+        const hasBackground = customBackground.length > 0;
+
+        if (!isCustomTheme || !hasBackground) {
+            document.documentElement.style.removeProperty("--custom-image-url");
+            return;
+        }
+
+        const image = new Image();
+
+        image.onload = () => {
+            const cssImage = `url(${JSON.stringify(customBackground)})`;
+            document.documentElement.style.setProperty("--custom-image-url", cssImage);
+        };
+
+        image.onerror = () => {
+            const alertMessage = "That image could not be loaded. Switching back to the Dark theme.";
+            window.alert(alertMessage);
+
+            document.documentElement.style.removeProperty("--custom-image-url");
+            localStorage.removeItem(BACKGROUND_STORAGE_KEY);
+            setCustomBackground("");
+            setBackgroundDraft("");
+            setTheme("dark");
+        };
+
+        image.src = customBackground;
+
+        return () => {
+            image.onload = null;
+            image.onerror = null;
+        };
+    }, [theme, customBackground]);
+
+    useEffect(() => {
+        const rootStyle = document.documentElement.style;
+
+        const blockAlpha = blockOpacity / 100;
+        const hoverAlpha = Math.min(1, blockAlpha + 0.08);
+
+        rootStyle.setProperty("--custom-block-alpha", String(blockAlpha));
+        rootStyle.setProperty("--custom-block-hover-alpha", String(hoverAlpha));
+        rootStyle.setProperty("--custom-image-blur", `${imageBlur}px`);
+    }, [blockOpacity, imageBlur]);
 
     useEffect(() => {
         if (isThemePickerOpen) {
@@ -347,6 +458,52 @@ export function App() {
         const dialogElement = themeDialogRef.current;
         dialogElement?.close();
         setIsThemePickerOpen(false);
+    }
+
+    function commitCustomBackground(): void {
+        const trimmedUrl = backgroundDraft.trim();
+        setBackgroundDraft(trimmedUrl);
+
+        const hasUrl = trimmedUrl.length > 0;
+
+        if (!hasUrl) {
+            localStorage.removeItem(BACKGROUND_STORAGE_KEY);
+            setCustomBackground("");
+            return;
+        }
+
+        const isUnchanged = trimmedUrl === customBackground;
+
+        if (isUnchanged) {
+            return;
+        }
+
+        localStorage.setItem(BACKGROUND_STORAGE_KEY, trimmedUrl);
+        setCustomBackground(trimmedUrl);
+    }
+
+    function handleBlockOpacityChange(event: React.ChangeEvent<HTMLInputElement>): void {
+        const nextOpacity = Number(event.target.value);
+        const isNumber = Number.isFinite(nextOpacity);
+
+        if (!isNumber) {
+            return;
+        }
+
+        setBlockOpacity(nextOpacity);
+        localStorage.setItem(BLOCK_OPACITY_STORAGE_KEY, String(nextOpacity));
+    }
+
+    function handleImageBlurChange(event: React.ChangeEvent<HTMLInputElement>): void {
+        const nextBlur = Number(event.target.value);
+        const isNumber = Number.isFinite(nextBlur);
+
+        if (!isNumber) {
+            return;
+        }
+
+        setImageBlur(nextBlur);
+        localStorage.setItem(IMAGE_BLUR_STORAGE_KEY, String(nextBlur));
     }
 
     function selectJohn(johnId: number): void {
@@ -545,6 +702,7 @@ export function App() {
 
     const uasm = stats.transactionTotal + stats.keyNumber;
 
+    const isCustomTheme = theme === "custom";
     const currentThemeLabel = THEMES.find((themeOption) => themeOption.id === theme)?.label ?? "Dark";
     const cloudStatusLabel = CLOUD_STATUS_LABELS[cloudStatus];
     const cloudStatusDotClass = CLOUD_STATUS_DOT_CLASSES[cloudStatus];
@@ -575,14 +733,14 @@ export function App() {
             />
 
             <div className="grid flex-1 grid-cols-2 grid-rows-[2fr_3fr] gap-3 p-4">
-                <section className="overflow-auto rounded border border-app-border bg-app-panel/40">
+                <section className="overflow-auto rounded border border-app-border bg-app-surface">
                     <SummaryArea
                         uasm={uasm}
                         funds={fundsTotal}
                     />
                 </section>
 
-                <section className="overflow-hidden rounded border border-app-border bg-app-panel/40">
+                <section className="overflow-hidden rounded border border-app-border bg-app-surface">
                     <textarea
                         value={notes}
                         placeholder="Notes..."
@@ -591,7 +749,7 @@ export function App() {
                     />
                 </section>
 
-                <section className="overflow-auto rounded border border-app-border bg-app-panel/40">
+                <section className="overflow-auto rounded border border-app-border bg-app-surface">
                     <TransactionTable
                         key={currentJohn.id}
                         johnId={currentJohn.id}
@@ -600,7 +758,7 @@ export function App() {
                         onStatsChange={setStats}
                     />
                 </section>
-                <section className="overflow-auto rounded border border-app-border bg-app-panel/40">
+                <section className="overflow-auto rounded border border-app-border bg-app-surface">
                     <FundsTable
                         key={currentJohn.id}
                         johnId={currentJohn.id}
@@ -632,7 +790,7 @@ export function App() {
             <dialog
                 ref={themeDialogRef}
                 onClose={closeThemePicker}
-                className="m-auto w-full max-w-sm rounded-lg border border-app-border-strong bg-app-panel p-5 text-app-text backdrop:backdrop-blur-md"
+                className="m-auto w-full max-w-md rounded-lg border border-app-border-strong bg-app-dialog p-5 text-app-text backdrop:backdrop-blur-md"
             >
                 <div className="flex flex-col gap-3">
                     <h2 className="text-lg font-semibold">Theme</h2>
@@ -671,6 +829,61 @@ export function App() {
                                 </button>
                             );
                         })}
+
+                        {isCustomTheme && (
+                            <>
+                                <label className="flex flex-col gap-1 px-3 pb-1">
+                                    <span className={LABEL_CLASS}>Image Link</span>
+                                    <input
+                                        type="text"
+                                        value={backgroundDraft}
+                                        placeholder="https://example.com/background.jpg"
+                                        onChange={(event) => setBackgroundDraft(event.target.value)}
+                                        onBlur={commitCustomBackground}
+                                        onKeyDown={(event) => {
+                                            if (event.key === "Enter") event.currentTarget.blur();
+                                        }}
+                                        className={FIELD_CLASS}
+                                    />
+                                </label>
+
+                                <label className="flex flex-col gap-1 px-3 pb-1">
+                                    <span className="flex items-center justify-between gap-3">
+                                        <span className={LABEL_CLASS}>Block Opacity</span>
+                                        <span className="text-xs tabular-nums text-app-muted">
+                                            {blockOpacity}
+                                        </span>
+                                    </span>
+                                    <input
+                                        type="range"
+                                        min={0}
+                                        max={100}
+                                        step={1}
+                                        value={blockOpacity}
+                                        onChange={handleBlockOpacityChange}
+                                        className="w-full accent-app-accent"
+                                    />
+                                </label>
+
+                                <label className="flex flex-col gap-1 px-3 pb-1">
+                                    <span className="flex items-center justify-between gap-3">
+                                        <span className={LABEL_CLASS}>Image Blur</span>
+                                        <span className="text-xs tabular-nums text-app-muted">
+                                            {imageBlur}
+                                        </span>
+                                    </span>
+                                    <input
+                                        type="range"
+                                        min={0}
+                                        max={MAX_IMAGE_BLUR}
+                                        step={1}
+                                        value={imageBlur}
+                                        onChange={handleImageBlurChange}
+                                        className="w-full accent-app-accent"
+                                    />
+                                </label>
+                            </>
+                        )}
                     </div>
 
                     <div className="flex items-center justify-between gap-2">

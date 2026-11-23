@@ -297,7 +297,7 @@ export function ActionBar({
       <dialog
         ref={dialogRef}
         onClose={closeSwitchModal}
-        className="m-auto w-full max-w-md rounded-lg border border-app-border-strong bg-app-panel p-6 text-app-text backdrop:backdrop-blur-md"
+        className="m-auto w-full max-w-md rounded-lg border border-app-border-strong bg-app-dialog p-6 text-app-text backdrop:backdrop-blur-md"
       >
         <div className="flex flex-col gap-4">
           <h2 className="text-lg font-semibold">Switch JOHN</h2>

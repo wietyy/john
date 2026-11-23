@@ -140,7 +140,7 @@ function FundModal({ mode, fund, onSubmit, onClose }: FundModalProps) {
         <dialog
             ref={dialogRef}
             onClose={onClose}
-            className="m-auto w-full max-w-md rounded-lg border border-app-border-strong bg-app-panel p-6 text-app-text backdrop:backdrop-blur-md"
+            className="m-auto w-full max-w-md rounded-lg border border-app-border-strong bg-app-dialog p-6 text-app-text backdrop:backdrop-blur-md"
         >
             <form className="flex flex-col gap-4" onSubmit={submitFund}>
                 <h2 className="text-lg font-semibold">
@@ -357,7 +357,7 @@ export function FundsTable({
         rows.push(
             <tr
                 key={fundId}
-                className="border-b border-app-border transition hover:bg-app-panel/60"
+                className="border-b border-app-border transition hover:bg-app-hover"
             >
                 <td className="px-2 py-2 text-sm">{fund.title}</td>
                 <td className="px-2 py-2 text-right text-sm tabular-nums">
@@ -415,7 +415,7 @@ export function FundsTable({
                 >
                     <td
                         colSpan={COLUMN_HEADINGS.length}
-                        className="bg-app-panel/40 px-2 py-2 text-sm text-app-muted"
+                        className="bg-app-surface px-2 py-2 text-sm text-app-muted"
                     >
                         {noteText}
                     </td>
